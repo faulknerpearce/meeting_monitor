@@ -1,0 +1,38 @@
+{
+  "google_events": {
+    "items": [
+      {
+        "id": "evt_standup_001",
+        "summary": "Daily Standup",
+        "start": { "dateTime": "2026-07-13T09:00:00-06:00" },
+        "end": { "dateTime": "2026-07-13T09:15:00-06:00" },
+        "location": "https://meet.google.com/abc-defg-hij",
+        "attendees": [
+          { "email": "alice@example.com" },
+          { "email": "bob@example.com" }
+        ],
+        "conferenceData": {
+          "entryPoints": [
+            {
+              "entryPointType": "video",
+              "uri": "https://meet.google.com/abc-defg-hij"
+            }
+          ]
+        }
+      },
+      {
+        "id": "evt_allday_001",
+        "summary": "Company Offsite",
+        "start": { "date": "2026-07-14" },
+        "end": { "date": "2026-07-15" }
+      },
+      {
+        "id": "evt_bad_date",
+        "summary": "Broken Event",
+        "start": {},
+        "end": {}
+      }
+    ]
+  },
+  "ical_sample": "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:spacemail-uid-42@spacemail.com\nDTSTART:20260713T150000Z\nDTEND:20260713T160000Z\nSUMMARY:Design Review\nLOCATION:https://zoom.us/j/123456789\nATTENDEE:mailto:carol@example.com\nATTENDEE:mailto:dave@example.com\nEND:VEVENT\nBEGIN:VEVENT\nUID:allday-uid-99@spacemail.com\nDTSTART;VALUE=DATE:20260716\nDTEND;VALUE=DATE:20260717\nSUMMARY:Focus Day\nEND:VEVENT\nEND:VCALENDAR\n"
+}

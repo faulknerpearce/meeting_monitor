@@ -1,0 +1,17 @@
+.DS_Store
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+.swiftpm/
+.idea/
+*.swp
+*~
+# Local credentials / secrets (never commit)
+credentials_*.dat
+.env
+.env.*
+*.pem
+*.p12
