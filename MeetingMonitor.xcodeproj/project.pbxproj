@@ -1,372 +1,553 @@
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
-	classes = {};
-	objectVersion = 56;
+	classes = {
+	};
+	objectVersion = 77;
 	objects = {
+
 /* Begin PBXBuildFile section */
-		D7920C8D24904B87B97B8322 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F800CD17BE4A1E9EBED0DA /* AppDelegate.swift */; };
-		DE978A266D0E4693B6E7CBE6 /* MeetingMonitorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBF5556CC0442F4B5DBEA4B /* MeetingMonitorApp.swift */; };
-		C489CB93AC224354A1ACE89A /* CalendarProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F4D8D9D2C94AFB9D52E773 /* CalendarProvider.swift */; };
-		17FC5FFB0DC64CEBB3E52711 /* GoogleCalendarClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A5865B2D49480B9355F5A6 /* GoogleCalendarClient.swift */; };
-		F0B091E74B9B47A59A326506 /* GoogleOAuthFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB564B75D4843C382053D88 /* GoogleOAuthFlow.swift */; };
-		D26B8D67404F4B599BEACAE1 /* MeetingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C55A65E7D34F4284FEA5A4 /* MeetingModels.swift */; };
-		C5E788D26AC342CF89C49F86 /* MeetingPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC229B0DBEA4C18A72C0FA9 /* MeetingPoller.swift */; };
-		AF6ED81C1BA14B92BC32C3E0 /* SpacemailCalDAVClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5EF27719FF4B0C961A5598 /* SpacemailCalDAVClient.swift */; };
-		9CAD97AFAEDA43DE99BF08F5 /* MenuBarLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 434C96E3232142D599E05D60 /* MenuBarLabelView.swift */; };
-		B007222D735040B7B965A778 /* MenuBarPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E64CCFB66F44C2F84F8640A /* MenuBarPanelView.swift */; };
-		CC0FC20C718945ECAD0A6029 /* MenuBarStatusRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 678983F3E3D94537923CEAE2 /* MenuBarStatusRenderer.swift */; };
-		596F08FF4E554471ADC63ACA /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED010A4E44B4BAC8E42A319 /* AppSettings.swift */; };
-		5341329D1EF74CB0B971AFFE /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC22F61F46148BD889808A5 /* PreferencesView.swift */; };
-		E096C0A7CCD64A6B962BB151 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDA05F9FA46C18BC12F0E /* CredentialStore.swift */; };
-		FC7FA4334CD249168486B6FF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ACDCE6CB286B406BA0D89F62 /* Assets.xcassets */; };
-		813EE204340143FC87240C4D /* meetings_fixture.json in Resources */ = {isa = PBXBuildFile; fileRef = 3E434B6C1B6C4615A2F1078F /* meetings_fixture.json */; };
-		8F1ED5F7B6944083864B82CC /* MeetingParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B5C04189CC46768B5ED6C6 /* MeetingParsingTests.swift */; };
-		8AB3C65D74184B9CBE491222 /* Meeting Monitor.app in Frameworks */ = {isa = PBXBuildFile; fileRef = 74664F00BD434519B6A06F70 /* Meeting Monitor.app */; };
+		005B85A6B422A76FA582D6C9 /* SpacemailCalDAVClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA905A5B75BEE746455E1F41 /* SpacemailCalDAVClient.swift */; };
+		10C7A726B87FEF8E1415E201 /* MeetingParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F197B27947B8407DC168499E /* MeetingParsingTests.swift */; };
+		133E1C9AE34B1FB25E770188 /* MeetingMonitorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A98A342C480039FA032F256 /* MeetingMonitorApp.swift */; };
+		2130694E96ED59A3666AD371 /* MenuBarPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7183C752D0162A9EF78ABA09 /* MenuBarPanelView.swift */; };
+		2AF4E347B8587FD599E165DF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C3501D405002DC131426B9BB /* Assets.xcassets */; };
+		348943F10CB5D83B1CF869CD /* GoogleOAuthFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBEA6934AD5C2D684C28C2C6 /* GoogleOAuthFlow.swift */; };
+		4068A33C88A29C05FA598B13 /* MenuBarStatusRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A3503522FFA926FBE649CE /* MenuBarStatusRenderer.swift */; };
+		4E9ED9F6A457799CB298FA46 /* GoogleCalendarClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462E5B4C83CFD6C5BCF1A638 /* GoogleCalendarClient.swift */; };
+		559246FDC9221F1646C8DBBC /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9461FFBED9D8CB5AD0D897D /* CredentialStore.swift */; };
+		58E10FA09E14CF53519B0E40 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD56E70D0342C33687E2D03 /* AppSettings.swift */; };
+		74E58378B8757894C5811965 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6274752996330691BB67B99B /* AppDelegate.swift */; };
+		848CF7F7D99481AE775F225F /* MenuBarLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176F1EC25A88F4DC8423A5E7 /* MenuBarLabelView.swift */; };
+		860FCFBCDE85DA5BC2C3A86F /* MeetingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFDA6F10BF0B6B9CE7694177 /* MeetingModels.swift */; };
+		AF60195C4001601FF6DCE292 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610999F4EC1AF659CA5FB81E /* PreferencesView.swift */; };
+		B9578F423F34BADF2B99D6E9 /* PanelTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3710862F5E88D4F0C62804C0 /* PanelTypography.swift */; };
+		C27F8E336843CDE83ED4F0A1 /* CalendarProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40D619630E12EA4B0D0DAF8 /* CalendarProvider.swift */; };
+		DA515E160DCDFA7C28CF4139 /* PanelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4361BDC02D2A716D562F9333 /* PanelCard.swift */; };
+		DCCAE6C93EE740DE44C4E9ED /* MeetingPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E39DBE2101E414F0358FC6 /* MeetingPoller.swift */; };
+		E81E921F1D28E1B158386972 /* meetings_fixture.json in Resources */ = {isa = PBXBuildFile; fileRef = 0984A6F3F370214524E77E55 /* meetings_fixture.json */; };
 /* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
-		BBDAAB52FA414914A977C9D4 /* PBXContainerItemProxy */ = {
+		6CC32C280E771F485BBF43FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 91AEAB04968A488FB1A03EE2 /* Project object */;
+			containerPortal = CAD08417B65908EAC3FA2D8B /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 46DEDE0745804CCE929092EB;
+			remoteGlobalIDString = 09105F8A79A88515DE55CC29;
 			remoteInfo = MeetingMonitor;
 		};
 /* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		74664F00BD434519B6A06F70 /* Meeting Monitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Meeting Monitor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D8A8AE4B343C41358E68E060 /* MeetingMonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeetingMonitorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		30F800CD17BE4A1E9EBED0DA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/App/AppDelegate.swift; sourceTree = SOURCE_ROOT; };
-		8DBF5556CC0442F4B5DBEA4B /* MeetingMonitorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/App/MeetingMonitorApp.swift; sourceTree = SOURCE_ROOT; };
-		93F4D8D9D2C94AFB9D52E773 /* CalendarProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/Calendars/CalendarProvider.swift; sourceTree = SOURCE_ROOT; };
-		D2A5865B2D49480B9355F5A6 /* GoogleCalendarClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/Calendars/GoogleCalendarClient.swift; sourceTree = SOURCE_ROOT; };
-		CFB564B75D4843C382053D88 /* GoogleOAuthFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/Calendars/GoogleOAuthFlow.swift; sourceTree = SOURCE_ROOT; };
-		F8C55A65E7D34F4284FEA5A4 /* MeetingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/Calendars/MeetingModels.swift; sourceTree = SOURCE_ROOT; };
-		1CC229B0DBEA4C18A72C0FA9 /* MeetingPoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/Calendars/MeetingPoller.swift; sourceTree = SOURCE_ROOT; };
-		0F5EF27719FF4B0C961A5598 /* SpacemailCalDAVClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/Calendars/SpacemailCalDAVClient.swift; sourceTree = SOURCE_ROOT; };
-		434C96E3232142D599E05D60 /* MenuBarLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/MenuBar/MenuBarLabelView.swift; sourceTree = SOURCE_ROOT; };
-		1E64CCFB66F44C2F84F8640A /* MenuBarPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/MenuBar/MenuBarPanelView.swift; sourceTree = SOURCE_ROOT; };
-		678983F3E3D94537923CEAE2 /* MenuBarStatusRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/MenuBar/MenuBarStatusRenderer.swift; sourceTree = SOURCE_ROOT; };
-		3ED010A4E44B4BAC8E42A319 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/Settings/AppSettings.swift; sourceTree = SOURCE_ROOT; };
-		0AC22F61F46148BD889808A5 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Features/Settings/PreferencesView.swift; sourceTree = SOURCE_ROOT; };
-		938CDA05F9FA46C18BC12F0E /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitor/Helpers/CredentialStore.swift; sourceTree = SOURCE_ROOT; };
-		A2B5C04189CC46768B5ED6C6 /* MeetingParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitorTests/MeetingParsingTests.swift; sourceTree = SOURCE_ROOT; };
-		ACDCE6CB286B406BA0D89F62 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = MeetingMonitor/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
-		3E434B6C1B6C4615A2F1078F /* meetings_fixture.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = MeetingMonitor/Fixtures/meetings_fixture.json; sourceTree = SOURCE_ROOT; };
-		1978BE6F14424FD3B75D8575 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = MeetingMonitor/Resources/Info.plist; sourceTree = SOURCE_ROOT; };
-		8CA09A7035804CC18B42AD16 /* MeetingMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetingMonitor/Resources/MeetingMonitor.entitlements; sourceTree = SOURCE_ROOT; };
+		00B76FBD77E96010CFA73D5F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0984A6F3F370214524E77E55 /* meetings_fixture.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = meetings_fixture.json; sourceTree = "<group>"; };
+		112FEC19B2B28BA19E82EF5D /* MeetingMonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeetingMonitorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		176F1EC25A88F4DC8423A5E7 /* MenuBarLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarLabelView.swift; sourceTree = "<group>"; };
+		2A98A342C480039FA032F256 /* MeetingMonitorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitorApp.swift; sourceTree = "<group>"; };
+		3710862F5E88D4F0C62804C0 /* PanelTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTypography.swift; sourceTree = "<group>"; };
+		4361BDC02D2A716D562F9333 /* PanelCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelCard.swift; sourceTree = "<group>"; };
+		45010E9FD9EFEA538D9E626D /* MeetingMonitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeetingMonitor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		462E5B4C83CFD6C5BCF1A638 /* GoogleCalendarClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleCalendarClient.swift; sourceTree = "<group>"; };
+		54A3503522FFA926FBE649CE /* MenuBarStatusRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStatusRenderer.swift; sourceTree = "<group>"; };
+		5C218DC4C319D045C3CC9BE7 /* MeetingMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetingMonitor.entitlements; sourceTree = "<group>"; };
+		5CD56E70D0342C33687E2D03 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		610999F4EC1AF659CA5FB81E /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		6274752996330691BB67B99B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		7183C752D0162A9EF78ABA09 /* MenuBarPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPanelView.swift; sourceTree = "<group>"; };
+		A9461FFBED9D8CB5AD0D897D /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
+		C3501D405002DC131426B9BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CBEA6934AD5C2D684C28C2C6 /* GoogleOAuthFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleOAuthFlow.swift; sourceTree = "<group>"; };
+		CFDA6F10BF0B6B9CE7694177 /* MeetingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingModels.swift; sourceTree = "<group>"; };
+		D1E39DBE2101E414F0358FC6 /* MeetingPoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingPoller.swift; sourceTree = "<group>"; };
+		DA905A5B75BEE746455E1F41 /* SpacemailCalDAVClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacemailCalDAVClient.swift; sourceTree = "<group>"; };
+		E40D619630E12EA4B0D0DAF8 /* CalendarProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarProvider.swift; sourceTree = "<group>"; };
+		F197B27947B8407DC168499E /* MeetingParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingParsingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
 /* Begin PBXGroup section */
-		31E12CF2D77C4562BCDEA5A1 = {
+		0E59FAD6060BEB6ED5D4C26D /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				86509DC5A84246F7BF965BCD /* Sources */,
-				19DFAF523C1D4A1F806E0B95 /* Resources */,
-				9E29361017CC4667BC720206 /* MeetingMonitorTests */,
-				6995EA6C657C41FC86B57091 /* Products */,
+				C3501D405002DC131426B9BB /* Assets.xcassets */,
+				00B76FBD77E96010CFA73D5F /* Info.plist */,
+				5C218DC4C319D045C3CC9BE7 /* MeetingMonitor.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		143CF7ADF2487DB2A4BDDC9D = {
+			isa = PBXGroup;
+			children = (
+				C215814F4F86DAA329CB53BA /* MeetingMonitor */,
+				51D0F8632D93D8878FCE3386 /* MeetingMonitorTests */,
+				D15120A93CB332FC29FB7792 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		6995EA6C657C41FC86B57091 /* Products */ = {
+		14B7313D2CEF7528859B4E75 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
-				74664F00BD434519B6A06F70 /* Meeting Monitor.app */,
-				D8A8AE4B343C41358E68E060 /* MeetingMonitorTests.xctest */,
+				0984A6F3F370214524E77E55 /* meetings_fixture.json */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		395DE861CFB25F475D7312DA /* App */ = {
+			isa = PBXGroup;
+			children = (
+				6274752996330691BB67B99B /* AppDelegate.swift */,
+				2A98A342C480039FA032F256 /* MeetingMonitorApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		51D0F8632D93D8878FCE3386 /* MeetingMonitorTests */ = {
+			isa = PBXGroup;
+			children = (
+				F197B27947B8407DC168499E /* MeetingParsingTests.swift */,
+			);
+			path = MeetingMonitorTests;
+			sourceTree = "<group>";
+		};
+		6AC482D8684EFC6762B4E8E5 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				4361BDC02D2A716D562F9333 /* PanelCard.swift */,
+				3710862F5E88D4F0C62804C0 /* PanelTypography.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		75CD2A11FA3659B7783C4AF1 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				F65B8637250D252365656C3F /* Calendars */,
+				C18CC4BA64FCE793B7E4FC4B /* MenuBar */,
+				91E4D8FBA5DEFAF70AA523A5 /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		91E4D8FBA5DEFAF70AA523A5 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				5CD56E70D0342C33687E2D03 /* AppSettings.swift */,
+				610999F4EC1AF659CA5FB81E /* PreferencesView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		C18CC4BA64FCE793B7E4FC4B /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				176F1EC25A88F4DC8423A5E7 /* MenuBarLabelView.swift */,
+				7183C752D0162A9EF78ABA09 /* MenuBarPanelView.swift */,
+				54A3503522FFA926FBE649CE /* MenuBarStatusRenderer.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		C215814F4F86DAA329CB53BA /* MeetingMonitor */ = {
+			isa = PBXGroup;
+			children = (
+				395DE861CFB25F475D7312DA /* App */,
+				75CD2A11FA3659B7783C4AF1 /* Features */,
+				14B7313D2CEF7528859B4E75 /* Fixtures */,
+				E87524DB40C86948F90B41D1 /* Helpers */,
+				0E59FAD6060BEB6ED5D4C26D /* Resources */,
+				6AC482D8684EFC6762B4E8E5 /* Shared */,
+			);
+			path = MeetingMonitor;
+			sourceTree = "<group>";
+		};
+		D15120A93CB332FC29FB7792 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				45010E9FD9EFEA538D9E626D /* MeetingMonitor.app */,
+				112FEC19B2B28BA19E82EF5D /* MeetingMonitorTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		86509DC5A84246F7BF965BCD /* Sources */ = {
+		E87524DB40C86948F90B41D1 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
-				30F800CD17BE4A1E9EBED0DA /* AppDelegate.swift */,
-				8DBF5556CC0442F4B5DBEA4B /* MeetingMonitorApp.swift */,
-				93F4D8D9D2C94AFB9D52E773 /* CalendarProvider.swift */,
-				D2A5865B2D49480B9355F5A6 /* GoogleCalendarClient.swift */,
-				CFB564B75D4843C382053D88 /* GoogleOAuthFlow.swift */,
-				F8C55A65E7D34F4284FEA5A4 /* MeetingModels.swift */,
-				1CC229B0DBEA4C18A72C0FA9 /* MeetingPoller.swift */,
-				0F5EF27719FF4B0C961A5598 /* SpacemailCalDAVClient.swift */,
-				434C96E3232142D599E05D60 /* MenuBarLabelView.swift */,
-				1E64CCFB66F44C2F84F8640A /* MenuBarPanelView.swift */,
-				678983F3E3D94537923CEAE2 /* MenuBarStatusRenderer.swift */,
-				3ED010A4E44B4BAC8E42A319 /* AppSettings.swift */,
-				0AC22F61F46148BD889808A5 /* PreferencesView.swift */,
-				938CDA05F9FA46C18BC12F0E /* CredentialStore.swift */,
+				A9461FFBED9D8CB5AD0D897D /* CredentialStore.swift */,
 			);
-			name = Sources;
+			path = Helpers;
 			sourceTree = "<group>";
 		};
-		19DFAF523C1D4A1F806E0B95 /* Resources */ = {
+		F65B8637250D252365656C3F /* Calendars */ = {
 			isa = PBXGroup;
 			children = (
-				ACDCE6CB286B406BA0D89F62 /* Assets.xcassets */,
-				3E434B6C1B6C4615A2F1078F /* meetings_fixture.json */,
-				1978BE6F14424FD3B75D8575 /* Info.plist */,
-				8CA09A7035804CC18B42AD16 /* MeetingMonitor.entitlements */,
+				E40D619630E12EA4B0D0DAF8 /* CalendarProvider.swift */,
+				462E5B4C83CFD6C5BCF1A638 /* GoogleCalendarClient.swift */,
+				CBEA6934AD5C2D684C28C2C6 /* GoogleOAuthFlow.swift */,
+				CFDA6F10BF0B6B9CE7694177 /* MeetingModels.swift */,
+				D1E39DBE2101E414F0358FC6 /* MeetingPoller.swift */,
+				DA905A5B75BEE746455E1F41 /* SpacemailCalDAVClient.swift */,
 			);
-			name = Resources;
-			sourceTree = "<group>";
-		};
-		9E29361017CC4667BC720206 /* MeetingMonitorTests */ = {
-			isa = PBXGroup;
-			children = (
-				A2B5C04189CC46768B5ED6C6 /* MeetingParsingTests.swift */,
-			);
-			name = MeetingMonitorTests;
+			path = Calendars;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
+
 /* Begin PBXNativeTarget section */
-		46DEDE0745804CCE929092EB /* MeetingMonitor */ = {
+		09105F8A79A88515DE55CC29 /* MeetingMonitor */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B0F64A4DFF294DF2902A33CC /* Build configuration list for PBXNativeTarget "MeetingMonitor" */;
+			buildConfigurationList = 10DE3AFCB2A84B4E2D66508C /* Build configuration list for PBXNativeTarget "MeetingMonitor" */;
 			buildPhases = (
-				B1A0E68AA4864B43B2FDD469 /* Sources */,
-				40C668B342FF4B0398D86726 /* Frameworks */,
-				3B0EDBC9129F487C9643629C /* Resources */,
+				AB196E7DBA88CEFD3599E6E9 /* Sources */,
+				A0FBD2CAC4BBBE29DAC31A4A /* Resources */,
 			);
-			buildRules = ();
-			dependencies = ();
+			buildRules = (
+			);
+			dependencies = (
+			);
 			name = MeetingMonitor;
+			packageProductDependencies = (
+			);
 			productName = MeetingMonitor;
-			productReference = 74664F00BD434519B6A06F70 /* Meeting Monitor.app */;
+			productReference = 45010E9FD9EFEA538D9E626D /* MeetingMonitor.app */;
 			productType = "com.apple.product-type.application";
 		};
-		59AFB8214BC34C7BBD45E1F3 /* MeetingMonitorTests */ = {
+		66CE57C3482BCE9EF64310C2 /* MeetingMonitorTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1BEA21959F274DF0A3534F46 /* Build configuration list for PBXNativeTarget "MeetingMonitorTests" */;
+			buildConfigurationList = FAAB2531A0F5D7767363B380 /* Build configuration list for PBXNativeTarget "MeetingMonitorTests" */;
 			buildPhases = (
-				A3C08FD28AEF417D9D05941D /* Sources */,
-				0B97760F8C96409CB09A4AE1 /* Frameworks */,
+				454949489CABB88AD95D03E4 /* Sources */,
 			);
-			buildRules = ();
+			buildRules = (
+			);
 			dependencies = (
-				7A9C0780B2D142149FF0F483 /* PBXTargetDependency */,
+				B4DA14321AC1DF83B5B3DD73 /* PBXTargetDependency */,
 			);
 			name = MeetingMonitorTests;
+			packageProductDependencies = (
+			);
 			productName = MeetingMonitorTests;
-			productReference = D8A8AE4B343C41358E68E060 /* MeetingMonitorTests.xctest */;
+			productReference = 112FEC19B2B28BA19E82EF5D /* MeetingMonitorTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
+
 /* Begin PBXProject section */
-		91AEAB04968A488FB1A03EE2 /* Project object */ = {
+		CAD08417B65908EAC3FA2D8B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
-				LastUpgradeCheck = 1600;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					09105F8A79A88515DE55CC29 = {
+						ProvisioningStyle = Automatic;
+					};
+					66CE57C3482BCE9EF64310C2 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
-			buildConfigurationList = CAF985909CA44F93B456C464 /* Build configuration list for PBXProject "MeetingMonitor" */;
-			compatibilityVersion = "Xcode 15.0";
+			buildConfigurationList = D3C12AD55C13A5DF3A7A3FC7 /* Build configuration list for PBXProject "MeetingMonitor" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
-			knownRegions = (en, Base);
-			mainGroup = 31E12CF2D77C4562BCDEA5A1;
-			productRefGroup = 6995EA6C657C41FC86B57091 /* Products */;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 143CF7ADF2487DB2A4BDDC9D;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D15120A93CB332FC29FB7792 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				46DEDE0745804CCE929092EB /* MeetingMonitor */,
-				59AFB8214BC34C7BBD45E1F3 /* MeetingMonitorTests */,
+				09105F8A79A88515DE55CC29 /* MeetingMonitor */,
+				66CE57C3482BCE9EF64310C2 /* MeetingMonitorTests */,
 			);
 		};
 /* End PBXProject section */
+
 /* Begin PBXResourcesBuildPhase section */
-		3B0EDBC9129F487C9643629C /* Resources */ = {
+		A0FBD2CAC4BBBE29DAC31A4A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FC7FA4334CD249168486B6FF /* Assets.xcassets in Resources */,
-				813EE204340143FC87240C4D /* meetings_fixture.json in Resources */,
+				2AF4E347B8587FD599E165DF /* Assets.xcassets in Resources */,
+				E81E921F1D28E1B158386972 /* meetings_fixture.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
-		B1A0E68AA4864B43B2FDD469 /* Sources */ = {
+		454949489CABB88AD95D03E4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D7920C8D24904B87B97B8322 /* AppDelegate.swift in Sources */,
-				DE978A266D0E4693B6E7CBE6 /* MeetingMonitorApp.swift in Sources */,
-				C489CB93AC224354A1ACE89A /* CalendarProvider.swift in Sources */,
-				17FC5FFB0DC64CEBB3E52711 /* GoogleCalendarClient.swift in Sources */,
-				F0B091E74B9B47A59A326506 /* GoogleOAuthFlow.swift in Sources */,
-				D26B8D67404F4B599BEACAE1 /* MeetingModels.swift in Sources */,
-				C5E788D26AC342CF89C49F86 /* MeetingPoller.swift in Sources */,
-				AF6ED81C1BA14B92BC32C3E0 /* SpacemailCalDAVClient.swift in Sources */,
-				9CAD97AFAEDA43DE99BF08F5 /* MenuBarLabelView.swift in Sources */,
-				B007222D735040B7B965A778 /* MenuBarPanelView.swift in Sources */,
-				CC0FC20C718945ECAD0A6029 /* MenuBarStatusRenderer.swift in Sources */,
-				596F08FF4E554471ADC63ACA /* AppSettings.swift in Sources */,
-				5341329D1EF74CB0B971AFFE /* PreferencesView.swift in Sources */,
-				E096C0A7CCD64A6B962BB151 /* CredentialStore.swift in Sources */,
+				10C7A726B87FEF8E1415E201 /* MeetingParsingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A3C08FD28AEF417D9D05941D /* Sources */ = {
+		AB196E7DBA88CEFD3599E6E9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F1ED5F7B6944083864B82CC /* MeetingParsingTests.swift in Sources */,
+				74E58378B8757894C5811965 /* AppDelegate.swift in Sources */,
+				58E10FA09E14CF53519B0E40 /* AppSettings.swift in Sources */,
+				C27F8E336843CDE83ED4F0A1 /* CalendarProvider.swift in Sources */,
+				559246FDC9221F1646C8DBBC /* CredentialStore.swift in Sources */,
+				4E9ED9F6A457799CB298FA46 /* GoogleCalendarClient.swift in Sources */,
+				348943F10CB5D83B1CF869CD /* GoogleOAuthFlow.swift in Sources */,
+				860FCFBCDE85DA5BC2C3A86F /* MeetingModels.swift in Sources */,
+				133E1C9AE34B1FB25E770188 /* MeetingMonitorApp.swift in Sources */,
+				DCCAE6C93EE740DE44C4E9ED /* MeetingPoller.swift in Sources */,
+				848CF7F7D99481AE775F225F /* MenuBarLabelView.swift in Sources */,
+				2130694E96ED59A3666AD371 /* MenuBarPanelView.swift in Sources */,
+				4068A33C88A29C05FA598B13 /* MenuBarStatusRenderer.swift in Sources */,
+				DA515E160DCDFA7C28CF4139 /* PanelCard.swift in Sources */,
+				B9578F423F34BADF2B99D6E9 /* PanelTypography.swift in Sources */,
+				AF60195C4001601FF6DCE292 /* PreferencesView.swift in Sources */,
+				005B85A6B422A76FA582D6C9 /* SpacemailCalDAVClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-/* Begin PBXFrameworksBuildPhase section */
-		40C668B342FF4B0398D86726 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = ();
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0B97760F8C96409CB09A4AE1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				8AB3C65D74184B9CBE491222 /* Meeting Monitor.app in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXTargetDependency section */
-		7A9C0780B2D142149FF0F483 /* PBXTargetDependency */ = {
+		B4DA14321AC1DF83B5B3DD73 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 46DEDE0745804CCE929092EB /* MeetingMonitor */;
-			targetProxy = BBDAAB52FA414914A977C9D4 /* PBXContainerItemProxy */;
+			target = 09105F8A79A88515DE55CC29 /* MeetingMonitor */;
+			targetProxy = 6CC32C280E771F485BBF43FE /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		C64E40E6478F4A769DAD46EB /* Debug */ = {
+		0BDAE78CB239A7F87034F08A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		6ADA52FAF66DD83A935B6672 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetingmonitor.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Meeting Monitor.app/Contents/MacOS/Meeting Monitor";
+			};
+			name = Release;
+		};
+		6F64FE8DECFD5C467AA02585 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
-		B296AB978B4B4D41855A93F8 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ENABLE_MODULES = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				SWIFT_VERSION = 5.10;
-			};
-			name = Release;
-		};
-		017CFF3EC642419BA2B8F060 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = MeetingMonitor/Resources/MeetingMonitor.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_TESTABILITY = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = MeetingMonitor/Resources/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.meetingmonitor.app;
-				PRODUCT_MODULE_NAME = MeetingMonitor;
-				PRODUCT_NAME = "Meeting Monitor";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.10;
 			};
 			name = Debug;
 		};
-		7E6179BAE5A343CA91B6C14E /* Release */ = {
+		807F95F626E2151DA05CFE7B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MeetingMonitor/Resources/MeetingMonitor.entitlements;
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MeetingMonitor/Resources/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.meetingmonitor.app;
 				PRODUCT_MODULE_NAME = MeetingMonitor;
 				PRODUCT_NAME = "Meeting Monitor";
-				SWIFT_VERSION = 5.10;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
-		2934290C92574570A9687CA5 /* Debug */ = {
+		CC765ADDF125B728214C4B34 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.meetingmonitor.tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.10;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Meeting Monitor.app/Contents/MacOS/Meeting Monitor";
-				ENABLE_TESTING_SEARCH_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MeetingMonitor/Resources/MeetingMonitor.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MeetingMonitor/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetingmonitor.app;
+				PRODUCT_MODULE_NAME = MeetingMonitor;
+				PRODUCT_NAME = "Meeting Monitor";
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
-		03D35210EA7E417B95D7F6A4 /* Release */ = {
+		F74CBCB91987384230332894 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.meetingmonitor.tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.10;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Meeting Monitor.app/Contents/MacOS/Meeting Monitor";
+				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetingmonitor.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Meeting Monitor.app/Contents/MacOS/Meeting Monitor";
 			};
-			name = Release;
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
+
 /* Begin XCConfigurationList section */
-		CAF985909CA44F93B456C464 /* Build configuration list for PBXProject "MeetingMonitor" */ = {
+		10DE3AFCB2A84B4E2D66508C /* Build configuration list for PBXNativeTarget "MeetingMonitor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C64E40E6478F4A769DAD46EB /* Debug */,
-				B296AB978B4B4D41855A93F8 /* Release */,
+				CC765ADDF125B728214C4B34 /* Debug */,
+				807F95F626E2151DA05CFE7B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		B0F64A4DFF294DF2902A33CC /* Build configuration list for PBXNativeTarget "MeetingMonitor" */ = {
+		D3C12AD55C13A5DF3A7A3FC7 /* Build configuration list for PBXProject "MeetingMonitor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				017CFF3EC642419BA2B8F060 /* Debug */,
-				7E6179BAE5A343CA91B6C14E /* Release */,
+				6F64FE8DECFD5C467AA02585 /* Debug */,
+				0BDAE78CB239A7F87034F08A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		1BEA21959F274DF0A3534F46 /* Build configuration list for PBXNativeTarget "MeetingMonitorTests" */ = {
+		FAAB2531A0F5D7767363B380 /* Build configuration list for PBXNativeTarget "MeetingMonitorTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2934290C92574570A9687CA5 /* Debug */,
-				03D35210EA7E417B95D7F6A4 /* Release */,
+				F74CBCB91987384230332894 /* Debug */,
+				6ADA52FAF66DD83A935B6672 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 91AEAB04968A488FB1A03EE2 /* Project object */;
+	rootObject = CAD08417B65908EAC3FA2D8B /* Project object */;
 }

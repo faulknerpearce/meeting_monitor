@@ -226,17 +226,22 @@ struct PreferencesView: View {
 
             Section("Display") {
                 Toggle("Show source icon in menu bar", isOn: $settings.showSourceInMenuBar)
+                    .toggleStyle(.switch)
                 Toggle("Show Google Calendar", isOn: $settings.showGoogleCalendar)
+                    .toggleStyle(.switch)
                     .disabled(!poller.isGoogleConfigured)
                 Toggle("Show Spacemail", isOn: $settings.showSpacemailCalendar)
+                    .toggleStyle(.switch)
                     .disabled(!poller.isSpacemailConfigured)
             }
 
             Section("System") {
                 Toggle("Launch at Login", isOn: $settings.launchAtLogin)
+                    .toggleStyle(.switch)
             }
         }
         .formStyle(.grouped)
+        .font(.system(size: 14))
         .padding()
         .frame(minWidth: 420, minHeight: 520)
         .frame(width: 500)

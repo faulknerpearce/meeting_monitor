@@ -37,7 +37,9 @@ struct MenuBarPanelView: View {
             menuActions
         }
         .padding(12)
-        .frame(minWidth: 320, idealWidth: 360, maxWidth: 400)
+        .frame(width: 420)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .onAppear {
             poller.menuIsOpen = true
             Task { await poller.refreshNow() }
@@ -52,32 +54,30 @@ struct MenuBarPanelView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Meeting Monitor")
-                .font(.system(size: 13, weight: .semibold))
+                .font(PanelTypography.title)
 
             HStack(spacing: 8) {
                 if let last = poller.lastRefreshedAt {
                     Text("Updated \(last.formatted(date: .omitted, time: .shortened))")
-                        .font(.system(size: 11))
+                        .font(PanelTypography.caption)
                         .foregroundStyle(.secondary)
                 } else if poller.isRefreshing {
                     Text("Refreshing…")
-                        .font(.system(size: 11))
+                        .font(PanelTypography.caption)
                         .foregroundStyle(.secondary)
                 } else if let error = poller.lastError {
                     Text(error)
-                        .font(.system(size: 11))
+                        .font(PanelTypography.caption)
                         .foregroundStyle(.red)
                 } else {
                     Text("Waiting for meetings…")
-                        .font(.system(size: 11))
+                        .font(PanelTypography.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer()
 
-                Text("\(poller.upcomingCount) upcoming")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.tertiary)
+                PanelPill(text: "\(poller.upcomingCount) upcoming")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -97,7 +97,7 @@ struct MenuBarPanelView: View {
                 meetingList
             }
         }
-        .frame(maxHeight: 420)
+        .frame(maxHeight: 560)
     }
 
     private var dateNavigation: some View {
@@ -108,10 +108,10 @@ struct MenuBarPanelView: View {
 
             VStack(spacing: 1) {
                 Text(dateTitle)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(PanelTypography.title)
                     .foregroundStyle(.primary)
                 Text(dayMeetingCountLabel)
-                    .font(.system(size: 10))
+                    .font(PanelTypography.micro)
                     .foregroundStyle(.tertiary)
             }
 
@@ -163,36 +163,33 @@ struct MenuBarPanelView: View {
             } else {
                 // Fixed min height: bare ScrollView inside MenuBarExtra often collapses to 0.
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 6) {
+                    LazyVStack(alignment: .leading, spacing: 10) {
                         if !allDayMeetings.isEmpty {
-                            sectionLabel("All day")
-                            ForEach(allDayMeetings) { meeting in
-                                meetingRow(meeting)
+                            PanelCard {
+                                PanelSectionHeader(title: "All day")
+                                ForEach(allDayMeetings) { meeting in
+                                    meetingRow(meeting)
+                                }
                             }
                         }
                         if !timedMeetings.isEmpty {
-                            if !allDayMeetings.isEmpty {
-                                sectionLabel("Schedule")
-                            }
-                            ForEach(timedMeetings) { meeting in
-                                meetingRow(meeting)
+                            PanelCard {
+                                if allDayMeetings.isEmpty {
+                                    PanelSectionHeader(title: dayMeetings.count == timedMeetings.count ? "Schedule" : "Timed")
+                                } else {
+                                    PanelSectionHeader(title: "Schedule")
+                                }
+                                ForEach(timedMeetings) { meeting in
+                                    meetingRow(meeting)
+                                }
                             }
                         }
                     }
                     .padding(.bottom, 4)
                 }
-                .frame(minHeight: 140, maxHeight: 320, alignment: .top)
+                .frame(minHeight: 200, maxHeight: 480, alignment: .top)
             }
         }
-    }
-
-    private func sectionLabel(_ title: String) -> some View {
-        Text(title)
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(.tertiary)
-            .textCase(.uppercase)
-            .padding(.top, 2)
-            .padding(.bottom, 2)
     }
 
     private func meetingRow(_ meeting: Meeting) -> some View {
@@ -215,7 +212,7 @@ struct MenuBarPanelView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text(meeting.title)
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(PanelTypography.bodySemibold)
                             .foregroundStyle(isPast ? Color.secondary : Color.primary)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
@@ -224,35 +221,35 @@ struct MenuBarPanelView: View {
 
                         if isNow {
                             Text("Now")
-                                .font(.system(size: 10, weight: .semibold))
+                                .font(PanelTypography.micro.weight(.semibold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Capsule().fill(color))
                         } else if !meeting.isAllDay, meeting.endDate > Date() {
                             Text(MeetingFormat.relativeTime(for: meeting))
-                                .font(.system(size: 10, weight: .medium))
+                                .font(PanelTypography.captionMedium)
                                 .foregroundStyle(.secondary)
                         }
                     }
 
                     HStack(spacing: 6) {
                         Text(MeetingFormat.timeRange(meeting))
-                            .font(.system(size: 11))
+                            .font(PanelTypography.caption)
                             .foregroundStyle(.secondary)
 
                         Text("·")
                             .foregroundStyle(.tertiary)
 
                         Text(meeting.source == .googleCalendar ? "Google" : "Spacemail")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(PanelTypography.micro.weight(.medium))
                             .foregroundStyle(color)
 
                         if hasJoin {
                             Text("·")
                                 .foregroundStyle(.tertiary)
                             Label("Join", systemImage: "video.fill")
-                                .font(.system(size: 10, weight: .medium))
+                                .font(PanelTypography.micro.weight(.medium))
                                 .foregroundStyle(color)
                                 .labelStyle(.titleAndIcon)
                         }
@@ -260,17 +257,17 @@ struct MenuBarPanelView: View {
 
                     if let location = meeting.location, !location.isEmpty {
                         Text(location)
-                            .font(.system(size: 10))
+                            .font(PanelTypography.micro)
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
                     }
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.primary.opacity(isPast ? 0.03 : 0.06))
+                    .fill(Color(nsColor: .controlBackgroundColor).opacity(isPast ? 0.6 : 1))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -296,44 +293,52 @@ struct MenuBarPanelView: View {
     }
 
     private var loadingState: some View {
-        HStack {
-            ProgressView().controlSize(.small).scaleEffect(0.8)
-            Text("Loading…")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
+        PanelCard {
+            HStack {
+                ProgressView().controlSize(.small).scaleEffect(0.8)
+                Text("Loading…")
+                    .font(PanelTypography.body)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 8)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.vertical, 16)
     }
 
     private var configurationEmptyState: some View {
-        VStack(spacing: 6) {
-            Text("No calendars configured.")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-            Button("Configure in Preferences…") { openPreferences() }
-                .font(.system(size: 12))
+        PanelCard {
+            VStack(spacing: 6) {
+                PanelSectionHeader(title: "No calendars")
+                Text("No calendars configured.")
+                    .font(PanelTypography.body)
+                    .foregroundStyle(.secondary)
+                Button("Configure in Preferences…") { openPreferences() }
+                    .font(PanelTypography.body)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 8)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.vertical, 16)
     }
 
     private var dayEmptyState: some View {
-        VStack(spacing: 6) {
-            Text("No meetings on this day.")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-            if !isToday {
-                Button("Go to Today") {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selectedDate = Date()
+        PanelCard {
+            VStack(spacing: 6) {
+                PanelSectionHeader(title: "No meetings")
+                Text("No meetings on this day.")
+                    .font(PanelTypography.body)
+                    .foregroundStyle(.secondary)
+                if !isToday {
+                    Button("Go to Today") {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedDate = Date()
+                        }
                     }
+                    .font(PanelTypography.caption)
                 }
-                .font(.system(size: 11))
             }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 8)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.vertical, 16)
     }
 
     // MARK: - Menu Actions
@@ -360,7 +365,7 @@ struct MenuBarPanelView: View {
             }
             .toggleStyle(.button)
             .buttonStyle(.plain)
-            .font(.system(size: 13))
+            .font(PanelTypography.body)
             .disabled(!poller.isGoogleConfigured)
 
             Toggle(isOn: $settings.showSpacemailCalendar) {
@@ -368,7 +373,7 @@ struct MenuBarPanelView: View {
             }
             .toggleStyle(.button)
             .buttonStyle(.plain)
-            .font(.system(size: 13))
+            .font(PanelTypography.body)
             .disabled(!poller.isSpacemailConfigured)
 
             Divider().padding(.vertical, 4)
@@ -393,7 +398,7 @@ struct MenuBarPanelView: View {
                 if let shortcut {
                     Text(shortcut)
                         .foregroundStyle(.secondary)
-                        .font(.system(size: 12))
+                        .font(PanelTypography.body)
                 }
             }
             .contentShape(Rectangle())
@@ -401,7 +406,7 @@ struct MenuBarPanelView: View {
             .padding(.vertical, 5)
         }
         .buttonStyle(.plain)
-        .font(.system(size: 13))
+        .font(PanelTypography.body)
     }
 
     private func statusLabel(_ title: String, enabled: Bool) -> some View {
@@ -414,10 +419,10 @@ struct MenuBarPanelView: View {
             if !enabled {
                 Text("Not configured")
                     .foregroundStyle(.tertiary)
-                    .font(.system(size: 11))
+                    .font(PanelTypography.caption)
             } else {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(PanelTypography.captionSemibold)
             }
         }
         .contentShape(Rectangle())
