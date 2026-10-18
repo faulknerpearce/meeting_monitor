@@ -5,7 +5,7 @@ let package = Package(
     name: "MeetingMonitor",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "MeetingMonitor", targets: ["MeetingMonitor"])
+        .executable(name: "MeetingMonitor", targets: ["MeetingMonitor"]),
     ],
     targets: [
         .executableTarget(
@@ -13,17 +13,18 @@ let package = Package(
             path: "MeetingMonitor",
             exclude: [
                 "Resources/Info.plist",
-                "Resources/MeetingMonitor.entitlements"
+                "Resources/MeetingMonitor.entitlements",
             ],
             resources: [
                 .process("Resources/Assets.xcassets"),
-                .copy("Fixtures/meetings_fixture.json")
             ]
         ),
         .testTarget(
             name: "MeetingMonitorTests",
             dependencies: ["MeetingMonitor"],
-            path: "MeetingMonitorTests"
+            path: "MeetingMonitorTests",
+            // Tests read the fixture from the source tree (#filePath).
+            exclude: ["Fixtures"]
         ),
     ]
 )

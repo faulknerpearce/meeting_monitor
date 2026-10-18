@@ -7,16 +7,12 @@ enum PanelTypography {
     /// Primary body copy and list rows.
     static let body = Font.system(size: 12)
     static let bodySemibold = Font.system(size: 12, weight: .semibold)
-    static let bodyDigit = Font.system(size: 12, weight: .semibold).monospacedDigit()
-    /// Secondary captions, tags, resets, source labels.
+    /// Secondary captions, tags and source labels.
     static let caption = Font.system(size: 11)
     static let captionMedium = Font.system(size: 11, weight: .medium)
     static let captionSemibold = Font.system(size: 11, weight: .semibold)
-    /// Chart axis / dense tertiary marks.
+    /// Dense tertiary marks.
     static let micro = Font.system(size: 10)
-    /// Stats-sheet label and value.
-    static let metricLabel = Font.system(size: 14)
-    static let metricValue = Font.system(size: 26, weight: .semibold)
 }
 
 /// Tracked uppercase section label used on panel blocks.

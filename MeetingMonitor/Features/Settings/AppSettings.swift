@@ -1,9 +1,16 @@
 import Foundation
+import os
 import ServiceManagement
 
 @MainActor
 final class AppSettings: ObservableObject {
-    private let defaults = UserDefaults.standard
+    static let activePollRange = 15...300
+    static let idlePollRange = 30...3600
+    static let lookaheadHoursRange = 1...72
+    static let defaultLookaheadHours = 72
+
+    private let defaults: UserDefaults
+    private let logger = Logger(category: "Settings")
 
     @Published var activePollSeconds: Int {
         didSet {
@@ -54,26 +61,28 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    /// Why the last Launch at Login change did not take effect.
+    @Published private(set) var launchAtLoginError: String?
+
     private var isRevertingLaunchAtLogin = false
 
-    /// Matches Preferences stepper range (`1...72`).
-    static let lookaheadHoursRange = 1...72
-    static let defaultLookaheadHours = 72
-
-    init() {
-        activePollSeconds = defaults.object(forKey: Keys.activePoll) as? Int ?? 60
-        idlePollSeconds = defaults.object(forKey: Keys.idlePoll) as? Int ?? 300
-        let storedLookahead = defaults.object(forKey: Keys.lookaheadHours) as? Int
-            ?? Self.defaultLookaheadHours
-        lookaheadHours = min(max(storedLookahead, Self.lookaheadHoursRange.lowerBound),
-                             Self.lookaheadHoursRange.upperBound)
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        activePollSeconds = Self.clamp(defaults.object(forKey: Keys.activePoll) as? Int ?? 60, to: Self.activePollRange)
+        idlePollSeconds = Self.clamp(defaults.object(forKey: Keys.idlePoll) as? Int ?? 300, to: Self.idlePollRange)
+        lookaheadHours = Self.clamp(
+            defaults.object(forKey: Keys.lookaheadHours) as? Int ?? Self.defaultLookaheadHours,
+            to: Self.lookaheadHoursRange
+        )
         showSourceInMenuBar = defaults.object(forKey: Keys.showSource) as? Bool ?? true
         showGoogleCalendar = defaults.object(forKey: Keys.showGoogleCalendar) as? Bool ?? true
         showSpacemailCalendar = defaults.object(forKey: Keys.showSpacemailCalendar) as? Bool ?? true
-        launchAtLogin = false
-        Task {
-            launchAtLogin = SMAppService.mainApp.status == .enabled
-        }
+        // Property observers do not run during init, so this does not re-register the service.
+        launchAtLogin = SMAppService.mainApp.status == .enabled
+    }
+
+    private static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
+        min(max(value, range.lowerBound), range.upperBound)
     }
 
     func filteredMeetings(_ meetings: [Meeting]) -> [Meeting] {
@@ -92,7 +101,10 @@ final class AppSettings: ObservableObject {
             } else {
                 try SMAppService.mainApp.unregister()
             }
+            launchAtLoginError = nil
         } catch {
+            launchAtLoginError = error.localizedDescription
+            logger.error("Launch at Login change failed: \(error.localizedDescription, privacy: .public)")
             let actual = SMAppService.mainApp.status == .enabled
             guard launchAtLogin != actual else { return }
             isRevertingLaunchAtLogin = true

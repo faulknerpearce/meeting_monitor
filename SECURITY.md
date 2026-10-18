@@ -26,12 +26,13 @@ If advisories are unavailable, email the maintainer listed on the GitHub profile
 ### Network
 
 - **Google Calendar** — OAuth 2.0 (PKCE + loopback) and Calendar API over HTTPS
-- **Spacemail** — CalDAV (`https://caldav.spacemail.com`) with Basic auth over HTTPS
+- **Spacemail** — CalDAV (`https://caldav.spacemail.com`) with Basic auth over HTTPS; credentials are only sent to that host, even if the server returns links elsewhere
 - Sandboxed app: `network.client` + `network.server` (loopback only for OAuth callback)
+- Ephemeral `URLSession`: no on-disk HTTP cache or persistent cookies
 
 ### Credentials
 
-- Stored under `~/Library/Application Support/MeetingMonitor/` with file mode `0600` and directory `0700`
+- Stored in the app's sandbox container under `~/Library/Containers/com.meetingmonitor.app/Data/Library/Application Support/MeetingMonitor/` with file mode `0600` and directory `0700`
 - OAuth client secret is **not** stored in UserDefaults
 - Do not commit real OAuth client IDs/secrets, mailbox passwords, or `credentials_*.dat` files
 

@@ -34,13 +34,22 @@ targets:
       configs:
         Debug:
           ENABLE_TESTABILITY: YES
+        Release:
+          # Keep get-task-allow (debugger attach) out of release builds; notarization rejects it.
+          CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
     entitlements:
       path: MeetingMonitor/Resources/MeetingMonitor.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.network.server: true
   MeetingMonitorTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: MeetingMonitorTests
+        excludes:
+          - "**/.DS_Store"
     dependencies:
       - target: MeetingMonitor
     settings:
