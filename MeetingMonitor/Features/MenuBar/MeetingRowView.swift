@@ -1,105 +1,71 @@
 import AppKit
 import SwiftUI
 
-/// One meeting in the day list; clicking opens its join link when it has one.
+/// One meeting in the day list, laid out like a network row in the Wi-Fi menu.
+/// Rows with a join link highlight on hover and open the link when clicked.
 struct MeetingRowView: View {
     let meeting: Meeting
     let now: Date
-
-    private var color: Color {
-        switch meeting.source {
-        case .googleCalendar: return Color(red: 0.15, green: 0.55, blue: 0.85)
-        case .spacemail: return Color(red: 0.95, green: 0.45, blue: 0.15)
-        }
-    }
 
     private var isPast: Bool { !meeting.isAllDay && meeting.endDate <= now }
     private var isNow: Bool { !meeting.isAllDay && meeting.startDate <= now && meeting.endDate > now }
 
     var body: some View {
-        Button {
-            if let url = meeting.meetingLink {
-                NSWorkspace.shared.open(url)
+        if let link = meeting.meetingLink {
+            Button {
+                NSWorkspace.shared.open(link)
+            } label: {
+                content
             }
-        } label: {
-            HStack(alignment: .top, spacing: 10) {
-                RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(color)
-                    .frame(width: 3)
-                    .padding(.vertical, 2)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    titleLine
-                    detailLine
-                    if let location = meeting.location {
-                        Text(location)
-                            .font(PanelTypography.micro)
-                            .foregroundStyle(.tertiary)
-                            .lineLimit(1)
-                    }
-                }
-            }
-            .padding(10)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(isPast ? 0.6 : 1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(color.opacity(isNow ? 0.45 : 0.18), lineWidth: 1)
-            )
-            .opacity(isPast ? 0.72 : 1)
+            .buttonStyle(MenuRowButtonStyle())
+            .help("Join \(meeting.title)")
+            .accessibilityHint("Opens the meeting link")
+        } else {
+            content
+                .menuRowLayout()
+                .help(meeting.title)
         }
-        .buttonStyle(.plain)
-        .help(meeting.meetingLink == nil ? meeting.title : "Click to join")
     }
 
-    private var titleLine: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text(meeting.title)
-                .font(PanelTypography.bodySemibold)
-                .foregroundStyle(isPast ? Color.secondary : Color.primary)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
+    private var content: some View {
+        HStack(spacing: 8) {
+            MenuRowIcon(
+                systemName: meeting.meetingLink == nil ? "calendar" : "video.fill",
+                tint: meeting.source.tint,
+                isActive: isNow
+            )
+            .opacity(isPast ? 0.5 : 1)
 
-            Spacer(minLength: 4)
-
-            if isNow {
-                Text("Now")
-                    .font(PanelTypography.micro.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(color))
-            } else if !meeting.isAllDay, meeting.endDate > now {
-                Text(MeetingFormat.relativeTime(for: meeting, now: now))
-                    .font(PanelTypography.captionMedium)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(meeting.title)
+                    .font(MenuMetrics.itemFont)
+                    .foregroundStyle(isPast ? .secondary : .primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Text("\(MeetingFormat.timeRange(meeting)) · \(meeting.source.shortName)")
+                    .font(MenuMetrics.detailFont)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
+
+            Spacer(minLength: 6)
+
+            trailingStatus
         }
+        .accessibilityElement(children: .combine)
     }
 
-    private var detailLine: some View {
-        HStack(spacing: 6) {
-            Text(MeetingFormat.timeRange(meeting))
-                .font(PanelTypography.caption)
+    @ViewBuilder
+    private var trailingStatus: some View {
+        if isNow {
+            Text("Now")
+                .font(MenuMetrics.detailFont.weight(.semibold))
+                .foregroundStyle(meeting.source.tint)
+        } else if !meeting.isAllDay, !isPast {
+            Text(MeetingFormat.relativeTime(for: meeting, now: now))
+                .font(MenuMetrics.detailFont)
                 .foregroundStyle(.secondary)
-
-            Text("·")
-                .foregroundStyle(.tertiary)
-
-            Text(meeting.source.shortName)
-                .font(PanelTypography.micro.weight(.medium))
-                .foregroundStyle(color)
-
-            if meeting.meetingLink != nil {
-                Text("·")
-                    .foregroundStyle(.tertiary)
-                Label("Join", systemImage: "video.fill")
-                    .font(PanelTypography.micro.weight(.medium))
-                    .foregroundStyle(color)
-                    .labelStyle(.titleAndIcon)
-            }
+                .monospacedDigit()
         }
     }
 }

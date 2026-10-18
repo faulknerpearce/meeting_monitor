@@ -21,6 +21,7 @@
 		559246FDC9221F1646C8DBBC /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9461FFBED9D8CB5AD0D897D /* CredentialStore.swift */; };
 		58E10FA09E14CF53519B0E40 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD56E70D0342C33687E2D03 /* AppSettings.swift */; };
 		645A4744554635D42CB63533 /* StorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9F53BC6A82AD4F0D752BD9 /* StorageTests.swift */; };
+		68A6513ED3E59B3551D8058D /* MenuComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9FBDB9E0FB8BA693397F639 /* MenuComponents.swift */; };
 		74E58378B8757894C5811965 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6274752996330691BB67B99B /* AppDelegate.swift */; };
 		78020E939E0D0F2A527AAE9D /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ED7E4E01095F3D32F5D1B87 /* Logging.swift */; };
 		848CF7F7D99481AE775F225F /* MenuBarLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176F1EC25A88F4DC8423A5E7 /* MenuBarLabelView.swift */; };
@@ -31,12 +32,10 @@
 		AB43E4358F12D41671420271 /* RecurrenceExpander.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFAA952DE756A24638DA2EE /* RecurrenceExpander.swift */; };
 		AE7ACEE812FD70E89B3AB881 /* SpacemailCalDAVClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E3F23B6B35D9F0C7FA5F67 /* SpacemailCalDAVClientTests.swift */; };
 		AF60195C4001601FF6DCE292 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610999F4EC1AF659CA5FB81E /* PreferencesView.swift */; };
-		B9578F423F34BADF2B99D6E9 /* PanelTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3710862F5E88D4F0C62804C0 /* PanelTypography.swift */; };
 		BBA6A8A3C303B1192E9293D2 /* ICalendarParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C8D5295E7D57938617B817 /* ICalendarParserTests.swift */; };
 		C27F8E336843CDE83ED4F0A1 /* CalendarProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40D619630E12EA4B0D0DAF8 /* CalendarProvider.swift */; };
 		CA6111AF10342B06839AAE57 /* MeetingFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657A92DB3E2573C2B915F334 /* MeetingFormatTests.swift */; };
 		D5CE4E1B7CFFA2BC52373F4E /* MeetingLinkDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F96044268D848C3DB0A1C8 /* MeetingLinkDetector.swift */; };
-		DA515E160DCDFA7C28CF4139 /* PanelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4361BDC02D2A716D562F9333 /* PanelCard.swift */; };
 		DCCAE6C93EE740DE44C4E9ED /* MeetingPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E39DBE2101E414F0358FC6 /* MeetingPoller.swift */; };
 		EF9B1F31DA45F1D30E18683E /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9697EB7949DD3941203BA99D /* TestSupport.swift */; };
 		EFCDC1C65F1A479F136F505F /* meetings_fixture.json in Resources */ = {isa = PBXBuildFile; fileRef = 0FE4D7DB10B6F46E481FCEA2 /* meetings_fixture.json */; };
@@ -62,9 +61,7 @@
 		176F1EC25A88F4DC8423A5E7 /* MenuBarLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarLabelView.swift; sourceTree = "<group>"; };
 		25D35C55CB738B903727ED12 /* GoogleOAuthFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleOAuthFlowTests.swift; sourceTree = "<group>"; };
 		2A98A342C480039FA032F256 /* MeetingMonitorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMonitorApp.swift; sourceTree = "<group>"; };
-		3710862F5E88D4F0C62804C0 /* PanelTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTypography.swift; sourceTree = "<group>"; };
 		3AFEAD80A8DDE0C6CECC5D35 /* RecurrenceExpanderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceExpanderTests.swift; sourceTree = "<group>"; };
-		4361BDC02D2A716D562F9333 /* PanelCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelCard.swift; sourceTree = "<group>"; };
 		45010E9FD9EFEA538D9E626D /* MeetingMonitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeetingMonitor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		462E5B4C83CFD6C5BCF1A638 /* GoogleCalendarClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleCalendarClient.swift; sourceTree = "<group>"; };
 		54A3503522FFA926FBE649CE /* MenuBarStatusRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStatusRenderer.swift; sourceTree = "<group>"; };
@@ -83,6 +80,7 @@
 		A9461FFBED9D8CB5AD0D897D /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
 		AB9F53BC6A82AD4F0D752BD9 /* StorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTests.swift; sourceTree = "<group>"; };
 		B6D05B4FD814C5E3C19C5A0E /* LoopbackCallbackServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopbackCallbackServer.swift; sourceTree = "<group>"; };
+		B9FBDB9E0FB8BA693397F639 /* MenuComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuComponents.swift; sourceTree = "<group>"; };
 		C2E3F23B6B35D9F0C7FA5F67 /* SpacemailCalDAVClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacemailCalDAVClientTests.swift; sourceTree = "<group>"; };
 		C3501D405002DC131426B9BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CBEA6934AD5C2D684C28C2C6 /* GoogleOAuthFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleOAuthFlow.swift; sourceTree = "<group>"; };
@@ -146,8 +144,7 @@
 		6AC482D8684EFC6762B4E8E5 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				4361BDC02D2A716D562F9333 /* PanelCard.swift */,
-				3710862F5E88D4F0C62804C0 /* PanelTypography.swift */,
+				B9FBDB9E0FB8BA693397F639 /* MenuComponents.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -373,8 +370,7 @@
 				848CF7F7D99481AE775F225F /* MenuBarLabelView.swift in Sources */,
 				2130694E96ED59A3666AD371 /* MenuBarPanelView.swift in Sources */,
 				4068A33C88A29C05FA598B13 /* MenuBarStatusRenderer.swift in Sources */,
-				DA515E160DCDFA7C28CF4139 /* PanelCard.swift in Sources */,
-				B9578F423F34BADF2B99D6E9 /* PanelTypography.swift in Sources */,
+				68A6513ED3E59B3551D8058D /* MenuComponents.swift in Sources */,
 				AF60195C4001601FF6DCE292 /* PreferencesView.swift in Sources */,
 				AB43E4358F12D41671420271 /* RecurrenceExpander.swift in Sources */,
 				A699EB1FBC4727E534820763 /* SpacemailCalDAVClient+Parsing.swift in Sources */,

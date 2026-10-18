@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 
+/// The menu bar dropdown, styled like macOS Control Center–style menus (Wi-Fi, Bluetooth).
 struct MenuBarPanelView: View {
     @ObservedObject var poller: MeetingPoller
     @ObservedObject var settings: AppSettings
@@ -8,6 +9,10 @@ struct MenuBarPanelView: View {
     var openPreferences: () -> Void
 
     @State private var selectedDate = Date()
+
+    /// Days with more meetings than this scroll instead of growing the menu.
+    private static let maxVisibleRows = 8
+    private static let rowHeight: CGFloat = 38
 
     private var filtered: [Meeting] { poller.filteredMeetings }
 
@@ -20,30 +25,34 @@ struct MenuBarPanelView: View {
             .sorted { $0.startDate < $1.startDate }
     }
 
-    private var allDayMeetings: [Meeting] {
-        dayMeetings.filter(\.isAllDay)
-    }
-
-    private var timedMeetings: [Meeting] {
-        dayMeetings.filter { !$0.isAllDay }
-    }
-
     private var isAnySourceConfigured: Bool {
         MeetingSource.allCases.contains(where: poller.isConfigured)
+    }
+
+    private var isShowingToday: Bool {
+        Calendar.current.isDateInToday(selectedDate)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-            Divider().padding(.vertical, 6)
-            meetingCalendar
-            Divider().padding(.vertical, 6)
-            menuActions
+            MenuSeparator()
+            if isAnySourceConfigured {
+                dayNavigator
+            }
+            meetings
+            MenuSeparator()
+            meetingActions
+            MenuSeparator()
+            calendars
+            MenuSeparator()
+            MenuActionRow(title: "Preferences…", shortcut: ",", action: openPreferences)
+            MenuActionRow(title: "Quit Meeting Monitor", shortcut: "q") {
+                NSApp.terminate(nil)
+            }
         }
-        .padding(12)
-        .frame(width: 420)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.vertical, 6)
+        .frame(width: MenuMetrics.width)
         .onAppear {
             selectedDate = Date()
             poller.menuIsOpen = true
@@ -57,103 +66,82 @@ struct MenuBarPanelView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
                 Text("Meeting Monitor")
-                    .font(PanelTypography.title)
+                    .font(MenuMetrics.titleFont)
                 Spacer()
-                PanelPill(text: "\(poller.upcomingCount) upcoming")
+                Text(statusText)
+                    .font(MenuMetrics.detailFont)
+                    .foregroundStyle(.secondary)
             }
-            status
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private var status: some View {
-        if let error = poller.lastError {
-            Text(error)
-                .font(PanelTypography.caption)
-                .foregroundStyle(.red)
-                .lineLimit(3)
-                .fixedSize(horizontal: false, vertical: true)
-        } else if let last = poller.lastRefreshedAt {
-            Text("Updated \(last.formatted(date: .omitted, time: .shortened))")
-                .font(PanelTypography.caption)
+            if let error = poller.lastError {
+                Label {
+                    Text(error)
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
+                .font(MenuMetrics.detailFont)
                 .foregroundStyle(.secondary)
-        } else if poller.isRefreshing {
-            Text("Refreshing…")
-                .font(PanelTypography.caption)
-                .foregroundStyle(.secondary)
-        } else {
-            Text("Waiting for meetings…")
-                .font(PanelTypography.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    // MARK: - Day list (calendar navigation)
-
-    private var meetingCalendar: some View {
-        VStack(spacing: 0) {
-            dateNavigation
-
-            if !isAnySourceConfigured {
-                configurationEmptyState
-            } else if poller.isRefreshing, filtered.isEmpty {
-                loadingState
-            } else {
-                meetingList
             }
         }
-        .frame(maxHeight: 560)
+        .padding(.horizontal, MenuMetrics.contentInset)
+        .padding(.top, 4)
     }
 
-    private var dateNavigation: some View {
-        HStack(spacing: 12) {
-            dayNavButton(systemName: "chevron.left", label: "Previous day") { shiftDay(by: -1) }
+    private var statusText: String {
+        guard isAnySourceConfigured else { return "" }
+        if poller.isRefreshing { return "Refreshing…" }
+        if let last = poller.lastRefreshedAt {
+            return "Updated \(last.formatted(date: .omitted, time: .shortened))"
+        }
+        return ""
+    }
 
-            Spacer()
+    // MARK: - Day navigator
 
-            VStack(spacing: 1) {
+    private var dayNavigator: some View {
+        HStack(alignment: .center, spacing: 6) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(dateTitle)
-                    .font(PanelTypography.title)
-                    .foregroundStyle(.primary)
+                    .font(MenuMetrics.titleFont)
                 Text(dayMeetingCountLabel)
-                    .font(PanelTypography.micro)
-                    .foregroundStyle(.tertiary)
+                    .font(MenuMetrics.detailFont)
+                    .foregroundStyle(.secondary)
             }
-
             Spacer()
-
-            dayNavButton(systemName: "chevron.right", label: "Next day") { shiftDay(by: 1) }
+            navigatorButton("chevron.left", label: "Previous day") { shiftDay(by: -1) }
+            Button("Today") {
+                selectedDate = Date()
+            }
+            .buttonStyle(.borderless)
+            .font(MenuMetrics.detailFont.weight(.medium))
+            .disabled(isShowingToday)
+            navigatorButton("chevron.right", label: "Next day") { shiftDay(by: 1) }
         }
-        .padding(.bottom, 8)
+        .padding(.horizontal, MenuMetrics.contentInset)
+        .padding(.bottom, 4)
     }
 
-    /// Full square is tappable (not just the chevron glyph).
-    private func dayNavButton(systemName: String, label: String, action: @escaping () -> Void) -> some View {
+    private func navigatorButton(_ systemName: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 28, height: 28)
-                .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color.secondary.opacity(0.1))
-                )
+                .font(.system(size: 11, weight: .semibold))
+                .frame(width: 18, height: 18)
+                .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.borderless)
         .accessibilityLabel(label)
     }
 
     private var dateTitle: String {
         let cal = Calendar.current
-        let date = selectedDate.formatted(date: .abbreviated, time: .omitted)
+        let date = selectedDate.formatted(.dateTime.month(.abbreviated).day())
         if cal.isDateInToday(selectedDate) { return "Today, \(date)" }
         if cal.isDateInTomorrow(selectedDate) { return "Tomorrow, \(date)" }
         if cal.isDateInYesterday(selectedDate) { return "Yesterday, \(date)" }
-        return selectedDate.formatted(date: .long, time: .omitted)
+        return selectedDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
     }
 
     private var dayMeetingCountLabel: String {
@@ -164,180 +152,109 @@ struct MenuBarPanelView: View {
         }
     }
 
-    private var meetingList: some View {
-        Group {
-            if dayMeetings.isEmpty {
-                dayEmptyState
-            } else {
-                // Fixed min height: bare ScrollView inside MenuBarExtra often collapses to 0.
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
-                        if !allDayMeetings.isEmpty {
-                            meetingSection(title: "All day", meetings: allDayMeetings)
-                        }
-                        if !timedMeetings.isEmpty {
-                            meetingSection(title: "Schedule", meetings: timedMeetings)
-                        }
-                    }
-                    .padding(.bottom, 4)
-                }
-                .frame(minHeight: 200, maxHeight: 480, alignment: .top)
-            }
-        }
-    }
-
-    private func meetingSection(title: String, meetings: [Meeting]) -> some View {
-        PanelCard {
-            PanelSectionHeader(title: title)
-            ForEach(meetings) { meeting in
-                MeetingRowView(meeting: meeting, now: Date())
-            }
-        }
-    }
-
-    private var loadingState: some View {
-        PanelCard {
-            HStack {
-                ProgressView().controlSize(.small).scaleEffect(0.8)
-                Text("Loading…")
-                    .font(PanelTypography.body)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 8)
-        }
-    }
-
-    private var configurationEmptyState: some View {
-        PanelCard {
-            VStack(spacing: 6) {
-                PanelSectionHeader(title: "No calendars")
-                Text("Connect Google Calendar or Spacemail to see meetings.")
-                    .font(PanelTypography.body)
-                    .foregroundStyle(.secondary)
-                Button("Configure in Preferences…") { openPreferences() }
-                    .font(PanelTypography.body)
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 8)
-        }
-    }
-
-    private var dayEmptyState: some View {
-        PanelCard {
-            VStack(spacing: 6) {
-                PanelSectionHeader(title: "No meetings")
-                Text("Nothing scheduled for this day.")
-                    .font(PanelTypography.body)
-                    .foregroundStyle(.secondary)
-                if !Calendar.current.isDateInToday(selectedDate) {
-                    Button("Go to Today") {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedDate = Date()
-                        }
-                    }
-                    .font(PanelTypography.caption)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 8)
-        }
-    }
-
-    // MARK: - Navigation
-
     private func shiftDay(by days: Int) {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            selectedDate = Calendar.current.date(byAdding: .day, value: days, to: selectedDate) ?? selectedDate
+        selectedDate = Calendar.current.date(byAdding: .day, value: days, to: selectedDate) ?? selectedDate
+    }
+
+    // MARK: - Meetings
+
+    @ViewBuilder
+    private var meetings: some View {
+        if !isAnySourceConfigured {
+            placeholder("No calendars connected")
+            MenuActionRow(title: "Connect a Calendar…", action: openPreferences)
+        } else if poller.isRefreshing, filtered.isEmpty {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text("Loading…")
+                    .font(MenuMetrics.itemFont)
+                    .foregroundStyle(.secondary)
+            }
+            .menuRowLayout()
+        } else if dayMeetings.isEmpty {
+            placeholder("Nothing scheduled")
+        } else if dayMeetings.count > Self.maxVisibleRows {
+            ScrollView {
+                meetingRows
+            }
+            .frame(height: CGFloat(Self.maxVisibleRows) * Self.rowHeight)
+        } else {
+            meetingRows
         }
     }
-}
 
-// MARK: - Menu Actions
-
-extension MenuBarPanelView {
-    private var menuActions: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            panelButton("Refresh", shortcut: "⌘R") {
-                Task { await poller.refreshNow() }
+    private var meetingRows: some View {
+        let now = Date()
+        let allDay = dayMeetings.filter(\.isAllDay)
+        let timed = dayMeetings.filter { !$0.isAllDay }
+        return VStack(alignment: .leading, spacing: 0) {
+            if !allDay.isEmpty {
+                MenuSectionHeader(title: "All Day")
+                ForEach(allDay) { MeetingRowView(meeting: $0, now: now) }
             }
-            .keyboardShortcut("r", modifiers: [.command])
-            .disabled(poller.isRefreshing)
-
-            if let url = poller.nextMeeting?.meetingLink {
-                panelButton("Join Next Meeting", shortcut: "⌘J") {
-                    NSWorkspace.shared.open(url)
+            if !timed.isEmpty {
+                if !allDay.isEmpty {
+                    MenuSectionHeader(title: "Meetings")
                 }
-                .keyboardShortcut("j", modifiers: [.command])
+                ForEach(timed) { MeetingRowView(meeting: $0, now: now) }
             }
-
-            Divider().padding(.vertical, 4)
-
-            sourceToggle(.googleCalendar, isOn: $settings.showGoogleCalendar)
-            sourceToggle(.spacemail, isOn: $settings.showSpacemailCalendar)
-
-            Divider().padding(.vertical, 4)
-
-            panelButton("Preferences…", shortcut: "⌘,", action: openPreferences)
-                .keyboardShortcut(",", modifiers: [.command])
-
-            Divider().padding(.vertical, 4)
-
-            panelButton("Quit Meeting Monitor", shortcut: "⌘Q") {
-                NSApp.terminate(nil)
-            }
-            .keyboardShortcut("q", modifiers: [.command])
         }
     }
 
-    private func sourceToggle(_ source: MeetingSource, isOn: Binding<Bool>) -> some View {
+    private func placeholder(_ text: String) -> some View {
+        Text(text)
+            .font(MenuMetrics.itemFont)
+            .foregroundStyle(.secondary)
+            .menuRowLayout()
+    }
+
+    // MARK: - Actions
+
+    @ViewBuilder
+    private var meetingActions: some View {
+        if let url = poller.nextMeeting?.meetingLink {
+            MenuActionRow(title: "Join Next Meeting", shortcut: "j") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+        MenuActionRow(title: poller.isRefreshing ? "Refreshing…" : "Refresh", shortcut: "r") {
+            Task { await poller.refreshNow() }
+        }
+        .disabled(poller.isRefreshing)
+    }
+
+    // MARK: - Calendars
+
+    private var calendars: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            MenuSectionHeader(title: "Calendars")
+            calendarRow(.googleCalendar, isOn: $settings.showGoogleCalendar)
+            calendarRow(.spacemail, isOn: $settings.showSpacemailCalendar)
+        }
+    }
+
+    /// Source row with a show/hide switch, like device rows in the Bluetooth menu.
+    private func calendarRow(_ source: MeetingSource, isOn: Binding<Bool>) -> some View {
         let configured = poller.isConfigured(source)
-        return Toggle(isOn: isOn) {
-            statusLabel(source.displayName, enabled: configured)
-        }
-        .toggleStyle(.button)
-        .buttonStyle(.plain)
-        .font(PanelTypography.body)
-        .disabled(!configured)
-    }
-
-    private func panelButton(_ title: String, shortcut: String?, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack {
-                Text(title)
-                Spacer()
-                if let shortcut {
-                    Text(shortcut)
+        return HStack(spacing: 8) {
+            MenuRowIcon(systemName: "calendar", tint: source.tint, isActive: configured && isOn.wrappedValue)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(source.displayName)
+                    .font(MenuMetrics.itemFont)
+                if !configured {
+                    Text("Not connected")
+                        .font(MenuMetrics.detailFont)
                         .foregroundStyle(.secondary)
-                        .font(PanelTypography.body)
                 }
             }
-            .contentShape(Rectangle())
-            .padding(.horizontal, 6)
-            .padding(.vertical, 5)
-        }
-        .buttonStyle(.plain)
-        .font(PanelTypography.body)
-    }
-
-    private func statusLabel(_ title: String, enabled: Bool) -> some View {
-        HStack {
-            Circle()
-                .fill(enabled ? Color.green : Color.gray)
-                .frame(width: 6, height: 6)
-            Text(title)
             Spacer()
-            if !enabled {
-                Text("Not configured")
-                    .foregroundStyle(.tertiary)
-                    .font(PanelTypography.caption)
-            } else {
-                Image(systemName: "checkmark")
-                    .font(PanelTypography.captionSemibold)
+            if configured {
+                Toggle("Show \(source.displayName)", isOn: isOn)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
             }
         }
-        .contentShape(Rectangle())
-        .padding(.horizontal, 6)
-        .padding(.vertical, 5)
+        .menuRowLayout()
     }
 }

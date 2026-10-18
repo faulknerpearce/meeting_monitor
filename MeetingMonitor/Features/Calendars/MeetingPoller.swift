@@ -40,12 +40,6 @@ final class MeetingPoller: ObservableObject {
     /// Next meeting for the menu bar label and "Join Next Meeting".
     var nextMeeting: Meeting? { MeetingFormat.nextMeeting(from: filteredMeetings, now: clock) }
 
-    /// Count of filtered meetings that have not fully ended.
-    var upcomingCount: Int {
-        let now = Date()
-        return filteredMeetings.filter { MeetingFormat.isRelevant($0, now: now) }.count
-    }
-
     /// Per-source errors joined for display, e.g. `Google: … · Spacemail: …`.
     var lastError: String? {
         let messages = MeetingSource.allCases.compactMap { source in
