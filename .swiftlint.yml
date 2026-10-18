@@ -1,0 +1,28 @@
+included:
+  - MeetingMonitor
+  - MeetingMonitorTests
+  - Scripts
+  - Package.swift
+
+excluded:
+  - build
+  - .build
+  - DerivedData
+  - dist
+
+# SwiftFormat (`.swiftformat`) adds trailing commas to multiline collections.
+trailing_comma:
+  mandatory_comma: true
+
+line_length:
+  warning: 140
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  excluded:
+    - id
+    - fd
+    - to
+    - x
+    - y

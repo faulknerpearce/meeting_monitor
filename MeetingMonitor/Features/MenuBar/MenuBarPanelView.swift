@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 struct MenuBarPanelView: View {
     @ObservedObject var poller: MeetingPoller
@@ -21,11 +21,15 @@ struct MenuBarPanelView: View {
     }
 
     private var allDayMeetings: [Meeting] {
-        dayMeetings.filter { $0.isAllDay }
+        dayMeetings.filter(\.isAllDay)
     }
 
     private var timedMeetings: [Meeting] {
         dayMeetings.filter { !$0.isAllDay }
+    }
+
+    private var isAnySourceConfigured: Bool {
+        MeetingSource.allCases.contains(where: poller.isConfigured)
     }
 
     var body: some View {
@@ -41,8 +45,8 @@ struct MenuBarPanelView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .onAppear {
+            selectedDate = Date()
             poller.menuIsOpen = true
-            Task { await poller.refreshNow() }
         }
         .onDisappear {
             poller.menuIsOpen = false
@@ -53,34 +57,38 @@ struct MenuBarPanelView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Meeting Monitor")
-                .font(PanelTypography.title)
-
             HStack(spacing: 8) {
-                if let last = poller.lastRefreshedAt {
-                    Text("Updated \(last.formatted(date: .omitted, time: .shortened))")
-                        .font(PanelTypography.caption)
-                        .foregroundStyle(.secondary)
-                } else if poller.isRefreshing {
-                    Text("Refreshing…")
-                        .font(PanelTypography.caption)
-                        .foregroundStyle(.secondary)
-                } else if let error = poller.lastError {
-                    Text(error)
-                        .font(PanelTypography.caption)
-                        .foregroundStyle(.red)
-                } else {
-                    Text("Waiting for meetings…")
-                        .font(PanelTypography.caption)
-                        .foregroundStyle(.secondary)
-                }
-
+                Text("Meeting Monitor")
+                    .font(PanelTypography.title)
                 Spacer()
-
                 PanelPill(text: "\(poller.upcomingCount) upcoming")
             }
+            status
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var status: some View {
+        if let error = poller.lastError {
+            Text(error)
+                .font(PanelTypography.caption)
+                .foregroundStyle(.red)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+        } else if let last = poller.lastRefreshedAt {
+            Text("Updated \(last.formatted(date: .omitted, time: .shortened))")
+                .font(PanelTypography.caption)
+                .foregroundStyle(.secondary)
+        } else if poller.isRefreshing {
+            Text("Refreshing…")
+                .font(PanelTypography.caption)
+                .foregroundStyle(.secondary)
+        } else {
+            Text("Waiting for meetings…")
+                .font(PanelTypography.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 
     // MARK: - Day list (calendar navigation)
@@ -89,9 +97,9 @@ struct MenuBarPanelView: View {
         VStack(spacing: 0) {
             dateNavigation
 
-            if !poller.isGoogleConfigured && !poller.isSpacemailConfigured {
+            if !isAnySourceConfigured {
                 configurationEmptyState
-            } else if poller.isRefreshing && filtered.isEmpty {
+            } else if poller.isRefreshing, filtered.isEmpty {
                 loadingState
             } else {
                 meetingList
@@ -102,7 +110,7 @@ struct MenuBarPanelView: View {
 
     private var dateNavigation: some View {
         HStack(spacing: 12) {
-            dayNavButton(systemName: "chevron.left", action: previousDay)
+            dayNavButton(systemName: "chevron.left", label: "Previous day") { shiftDay(by: -1) }
 
             Spacer()
 
@@ -117,13 +125,13 @@ struct MenuBarPanelView: View {
 
             Spacer()
 
-            dayNavButton(systemName: "chevron.right", action: nextDay)
+            dayNavButton(systemName: "chevron.right", label: "Next day") { shiftDay(by: 1) }
         }
         .padding(.bottom, 8)
     }
 
     /// Full square is tappable (not just the chevron glyph).
-    private func dayNavButton(systemName: String, action: @escaping () -> Void) -> some View {
+    private func dayNavButton(systemName: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 14, weight: .semibold))
@@ -136,24 +144,24 @@ struct MenuBarPanelView: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     private var dateTitle: String {
         let cal = Calendar.current
-        if cal.isDateInToday(selectedDate) {
-            return "Today, \(selectedDate.formatted(date: .abbreviated, time: .omitted))"
-        } else if cal.isDateInTomorrow(selectedDate) {
-            return "Tomorrow, \(selectedDate.formatted(date: .abbreviated, time: .omitted))"
-        } else if cal.isDateInYesterday(selectedDate) {
-            return "Yesterday, \(selectedDate.formatted(date: .abbreviated, time: .omitted))"
-        }
+        let date = selectedDate.formatted(date: .abbreviated, time: .omitted)
+        if cal.isDateInToday(selectedDate) { return "Today, \(date)" }
+        if cal.isDateInTomorrow(selectedDate) { return "Tomorrow, \(date)" }
+        if cal.isDateInYesterday(selectedDate) { return "Yesterday, \(date)" }
         return selectedDate.formatted(date: .long, time: .omitted)
     }
 
     private var dayMeetingCountLabel: String {
-        let count = dayMeetings.count
-        if count == 0 { return "No meetings" }
-        return count == 1 ? "1 meeting" : "\(count) meetings"
+        switch dayMeetings.count {
+        case 0: return "No meetings"
+        case 1: return "1 meeting"
+        case let count: return "\(count) meetings"
+        }
     }
 
     private var meetingList: some View {
@@ -165,24 +173,10 @@ struct MenuBarPanelView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 10) {
                         if !allDayMeetings.isEmpty {
-                            PanelCard {
-                                PanelSectionHeader(title: "All day")
-                                ForEach(allDayMeetings) { meeting in
-                                    meetingRow(meeting)
-                                }
-                            }
+                            meetingSection(title: "All day", meetings: allDayMeetings)
                         }
                         if !timedMeetings.isEmpty {
-                            PanelCard {
-                                if allDayMeetings.isEmpty {
-                                    PanelSectionHeader(title: dayMeetings.count == timedMeetings.count ? "Schedule" : "Timed")
-                                } else {
-                                    PanelSectionHeader(title: "Schedule")
-                                }
-                                ForEach(timedMeetings) { meeting in
-                                    meetingRow(meeting)
-                                }
-                            }
+                            meetingSection(title: "Schedule", meetings: timedMeetings)
                         }
                     }
                     .padding(.bottom, 4)
@@ -192,103 +186,12 @@ struct MenuBarPanelView: View {
         }
     }
 
-    private func meetingRow(_ meeting: Meeting) -> some View {
-        let color = sourceColor(for: meeting)
-        let isPast = !meeting.isAllDay && meeting.endDate < Date()
-        let isNow = !meeting.isAllDay && meeting.startDate <= Date() && meeting.endDate >= Date()
-        let hasJoin = meeting.meetingLink.flatMap(URL.init(string:)) != nil
-
-        return Button {
-            if let link = meeting.meetingLink, let url = URL(string: link) {
-                NSWorkspace.shared.open(url)
+    private func meetingSection(title: String, meetings: [Meeting]) -> some View {
+        PanelCard {
+            PanelSectionHeader(title: title)
+            ForEach(meetings) { meeting in
+                MeetingRowView(meeting: meeting, now: Date())
             }
-        } label: {
-            HStack(alignment: .top, spacing: 10) {
-                RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(color)
-                    .frame(width: 3)
-                    .padding(.vertical, 2)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(meeting.title)
-                            .font(PanelTypography.bodySemibold)
-                            .foregroundStyle(isPast ? Color.secondary : Color.primary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-
-                        Spacer(minLength: 4)
-
-                        if isNow {
-                            Text("Now")
-                                .font(PanelTypography.micro.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Capsule().fill(color))
-                        } else if !meeting.isAllDay, meeting.endDate > Date() {
-                            Text(MeetingFormat.relativeTime(for: meeting))
-                                .font(PanelTypography.captionMedium)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    HStack(spacing: 6) {
-                        Text(MeetingFormat.timeRange(meeting))
-                            .font(PanelTypography.caption)
-                            .foregroundStyle(.secondary)
-
-                        Text("·")
-                            .foregroundStyle(.tertiary)
-
-                        Text(meeting.source == .googleCalendar ? "Google" : "Spacemail")
-                            .font(PanelTypography.micro.weight(.medium))
-                            .foregroundStyle(color)
-
-                        if hasJoin {
-                            Text("·")
-                                .foregroundStyle(.tertiary)
-                            Label("Join", systemImage: "video.fill")
-                                .font(PanelTypography.micro.weight(.medium))
-                                .foregroundStyle(color)
-                                .labelStyle(.titleAndIcon)
-                        }
-                    }
-
-                    if let location = meeting.location, !location.isEmpty {
-                        Text(location)
-                            .font(PanelTypography.micro)
-                            .foregroundStyle(.tertiary)
-                            .lineLimit(1)
-                    }
-                }
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(isPast ? 0.6 : 1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(color.opacity(isNow ? 0.45 : 0.18), lineWidth: 1)
-            )
-            .opacity(isPast ? 0.72 : 1)
-        }
-        .buttonStyle(.plain)
-        .help(hasJoin ? "Click to join" : meeting.title)
-    }
-
-    private var isToday: Bool {
-        Calendar.current.isDateInToday(selectedDate)
-    }
-
-    private func sourceColor(for meeting: Meeting) -> Color {
-        switch meeting.source {
-        case .googleCalendar:
-            return Color(red: 0.15, green: 0.55, blue: 0.85)
-        case .spacemail:
-            return Color(red: 0.95, green: 0.45, blue: 0.15)
         }
     }
 
@@ -309,7 +212,7 @@ struct MenuBarPanelView: View {
         PanelCard {
             VStack(spacing: 6) {
                 PanelSectionHeader(title: "No calendars")
-                Text("No calendars configured.")
+                Text("Connect Google Calendar or Spacemail to see meetings.")
                     .font(PanelTypography.body)
                     .foregroundStyle(.secondary)
                 Button("Configure in Preferences…") { openPreferences() }
@@ -324,10 +227,10 @@ struct MenuBarPanelView: View {
         PanelCard {
             VStack(spacing: 6) {
                 PanelSectionHeader(title: "No meetings")
-                Text("No meetings on this day.")
+                Text("Nothing scheduled for this day.")
                     .font(PanelTypography.body)
                     .foregroundStyle(.secondary)
-                if !isToday {
+                if !Calendar.current.isDateInToday(selectedDate) {
                     Button("Go to Today") {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedDate = Date()
@@ -341,8 +244,18 @@ struct MenuBarPanelView: View {
         }
     }
 
-    // MARK: - Menu Actions
+    // MARK: - Navigation
 
+    private func shiftDay(by days: Int) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            selectedDate = Calendar.current.date(byAdding: .day, value: days, to: selectedDate) ?? selectedDate
+        }
+    }
+}
+
+// MARK: - Menu Actions
+
+extension MenuBarPanelView {
     private var menuActions: some View {
         VStack(alignment: .leading, spacing: 2) {
             panelButton("Refresh", shortcut: "⌘R") {
@@ -351,7 +264,7 @@ struct MenuBarPanelView: View {
             .keyboardShortcut("r", modifiers: [.command])
             .disabled(poller.isRefreshing)
 
-            if let next = poller.nextMeeting, let link = next.meetingLink, let url = URL(string: link) {
+            if let url = poller.nextMeeting?.meetingLink {
                 panelButton("Join Next Meeting", shortcut: "⌘J") {
                     NSWorkspace.shared.open(url)
                 }
@@ -360,21 +273,8 @@ struct MenuBarPanelView: View {
 
             Divider().padding(.vertical, 4)
 
-            Toggle(isOn: $settings.showGoogleCalendar) {
-                statusLabel("Google Calendar", enabled: poller.isGoogleConfigured)
-            }
-            .toggleStyle(.button)
-            .buttonStyle(.plain)
-            .font(PanelTypography.body)
-            .disabled(!poller.isGoogleConfigured)
-
-            Toggle(isOn: $settings.showSpacemailCalendar) {
-                statusLabel("Spacemail", enabled: poller.isSpacemailConfigured)
-            }
-            .toggleStyle(.button)
-            .buttonStyle(.plain)
-            .font(PanelTypography.body)
-            .disabled(!poller.isSpacemailConfigured)
+            sourceToggle(.googleCalendar, isOn: $settings.showGoogleCalendar)
+            sourceToggle(.spacemail, isOn: $settings.showSpacemailCalendar)
 
             Divider().padding(.vertical, 4)
 
@@ -388,6 +288,17 @@ struct MenuBarPanelView: View {
             }
             .keyboardShortcut("q", modifiers: [.command])
         }
+    }
+
+    private func sourceToggle(_ source: MeetingSource, isOn: Binding<Bool>) -> some View {
+        let configured = poller.isConfigured(source)
+        return Toggle(isOn: isOn) {
+            statusLabel(source.displayName, enabled: configured)
+        }
+        .toggleStyle(.button)
+        .buttonStyle(.plain)
+        .font(PanelTypography.body)
+        .disabled(!configured)
     }
 
     private func panelButton(_ title: String, shortcut: String?, action: @escaping () -> Void) -> some View {
@@ -428,19 +339,5 @@ struct MenuBarPanelView: View {
         .contentShape(Rectangle())
         .padding(.horizontal, 6)
         .padding(.vertical, 5)
-    }
-
-    // MARK: - Navigation
-
-    private func previousDay() {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            selectedDate = Calendar.current.date(byAdding: .day, value: -1, to: selectedDate) ?? selectedDate
-        }
-    }
-
-    private func nextDay() {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            selectedDate = Calendar.current.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
-        }
     }
 }

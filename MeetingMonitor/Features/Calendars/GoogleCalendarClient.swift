@@ -2,25 +2,44 @@ import Foundation
 import os
 
 @MainActor
-final class GoogleCalendarClient: ObservableObject {
+final class GoogleCalendarClient: ObservableObject, MeetingProvider {
     let source: MeetingSource = .googleCalendar
-    private let logger = Logger(subsystem: "com.meetingmonitor.app", category: "GoogleCalendar")
+    private let logger = Logger(category: "GoogleCalendar")
     private let session: URLSession
-    private let baseURL = URL(string: "https://www.googleapis.com/calendar/v3")!
-    private let tokenURL = URL(string: "https://oauth2.googleapis.com/token")!
+    private let eventsURL = URL(string: "https://www.googleapis.com/calendar/v3/calendars/primary/events")!
+    /// Pages fetched per refresh; 250 events per page.
+    private let maxPages = 8
+
+    // ISO8601DateFormatter is thread-safe; parsing runs off the main actor.
+    private nonisolated(unsafe) static let isoFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    private nonisolated(unsafe) static let fractionalISOFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
 
     @Published private(set) var isConfigured = false
     @Published private(set) var email: String?
     @Published private(set) var isAuthenticating = false
+    /// Stored credentials stopped working; the user has to sign in again.
     @Published private(set) var lastAuthError: String?
+    /// The most recent interactive sign-in failed or was cancelled.
+    @Published private(set) var signInError: String?
 
     /// OAuth Desktop client ID (remembered between launches for the sign-in form).
     @Published var oauthClientID: String {
         didSet { UserDefaults.standard.set(oauthClientID, forKey: Keys.oauthClientID) }
     }
 
-    /// Optional client secret — held in memory / CredentialStore only (never UserDefaults).
+    /// Optional client secret — held in memory and in CredentialStore only, never UserDefaults.
     @Published var oauthClientSecret: String = ""
+
+    private var signInTask: Task<GoogleOAuthFlow.Tokens, Error>?
 
     private var credentials: CalendarCredentials? {
         didSet { applyCredentialState() }
@@ -29,12 +48,11 @@ final class GoogleCalendarClient: ObservableObject {
     init(session: URLSession) {
         self.session = session
         oauthClientID = UserDefaults.standard.string(forKey: Keys.oauthClientID) ?? ""
-        // Drop legacy secret key if present (was stored in UserDefaults in older builds).
+        // The client secret must not live in UserDefaults; remove any stored copy.
         UserDefaults.standard.removeObject(forKey: Keys.legacyOAuthClientSecret)
-        credentials = CredentialStore.load(provider: "google")
+        credentials = CredentialStore.load(provider: MeetingSource.googleCalendar.credentialKey)
         // `didSet` does not run during init — apply loaded credentials explicitly.
         applyCredentialState()
-        // Prefill OAuth form from stored credentials when available.
         if let creds = credentials {
             if oauthClientID.isEmpty, let id = creds.clientId { oauthClientID = id }
             if let secret = creds.clientSecret, !secret.isEmpty { oauthClientSecret = secret }
@@ -46,49 +64,62 @@ final class GoogleCalendarClient: ObservableObject {
         email = credentials?.username
     }
 
-    /// True when Google needs the user to sign in again (token/refresh failure).
+    /// True when stored Google credentials were refused and the user must sign in again.
     var needsReauth: Bool {
         lastAuthError != nil && isConfigured
     }
 
-    /// Interactive browser OAuth (PKCE + loopback). Spacemail stays password-based.
+    /// Interactive browser OAuth (PKCE + loopback). Cancel with `cancelSignIn()`.
     func signInWithGoogle() async {
-        guard !isAuthenticating else { return }
+        guard signInTask == nil else { return }
         isAuthenticating = true
-        lastAuthError = nil
-        defer { isAuthenticating = false }
+        signInError = nil
+
+        let clientID = oauthClientID.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSecret = oauthClientSecret.trimmingCharacters(in: .whitespacesAndNewlines)
+        let secret = trimmedSecret.isEmpty ? nil : trimmedSecret
+        let session = session
+        let task = Task {
+            try await GoogleOAuthFlow.signIn(clientID: clientID, clientSecret: secret, session: session)
+        }
+        signInTask = task
+        defer {
+            signInTask = nil
+            isAuthenticating = false
+        }
 
         do {
-            let tokens = try await GoogleOAuthFlow.signIn(
-                clientID: oauthClientID,
-                clientSecret: oauthClientSecret.isEmpty ? nil : oauthClientSecret,
-                session: session
-            )
-            let secret = oauthClientSecret.isEmpty ? nil : oauthClientSecret
+            let tokens = try await task.value
             let creds = CalendarCredentials(
-                provider: "google",
+                provider: MeetingSource.googleCalendar.credentialKey,
                 username: tokens.email,
                 password: nil,
                 accessToken: tokens.accessToken,
                 refreshToken: tokens.refreshToken,
                 tokenExpiry: Date().addingTimeInterval(tokens.expiresIn - 60),
-                clientId: oauthClientID.trimmingCharacters(in: .whitespacesAndNewlines),
+                clientId: clientID,
                 clientSecret: secret
             )
             credentials = creds
             CredentialStore.save(credential: creds)
-            logger.info("Google OAuth sign-in succeeded for \(tokens.email ?? "unknown", privacy: .public)")
+            lastAuthError = nil
+            logger.info("Google OAuth sign-in succeeded for \(tokens.email ?? "unknown", privacy: .private)")
         } catch {
-            lastAuthError = error.localizedDescription
+            signInError = error.localizedDescription
             logger.error("Google OAuth failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    func cancelSignIn() {
+        signInTask?.cancel()
     }
 
     func clearCredentials() {
         credentials = nil
         lastAuthError = nil
+        signInError = nil
         oauthClientSecret = ""
-        CredentialStore.delete(provider: "google")
+        CredentialStore.delete(provider: MeetingSource.googleCalendar.credentialKey)
     }
 
     func fetchMeetings(from startDate: Date, to endDate: Date) async throws -> [Meeting] {
@@ -97,43 +128,49 @@ final class GoogleCalendarClient: ObservableObject {
         }
 
         let token = try await getAccessToken()
+        var meetings: [Meeting] = []
+        var pageToken: String?
+        var pages = 0
 
-        guard var components = URLComponents(
-            url: baseURL.appendingPathComponent("calendars/primary/events"),
-            resolvingAgainstBaseURL: false
-        ) else {
-            throw CalendarProviderError.networkError("Invalid URL")
-        }
-        components.queryItems = [
-            URLQueryItem(name: "timeMin", value: Self.isoString(from: startDate)),
-            URLQueryItem(name: "timeMax", value: Self.isoString(from: endDate)),
-            URLQueryItem(name: "singleEvents", value: "true"),
-            URLQueryItem(name: "orderBy", value: "startTime"),
-            URLQueryItem(name: "maxResults", value: "100"),
-        ]
+        repeat {
+            var components = URLComponents(url: eventsURL, resolvingAgainstBaseURL: false)!
+            components.queryItems = [
+                URLQueryItem(name: "timeMin", value: Self.isoFormatter.string(from: startDate)),
+                URLQueryItem(name: "timeMax", value: Self.isoFormatter.string(from: endDate)),
+                URLQueryItem(name: "singleEvents", value: "true"),
+                URLQueryItem(name: "orderBy", value: "startTime"),
+                URLQueryItem(name: "maxResults", value: "250"),
+            ]
+            if let pageToken {
+                components.queryItems?.append(URLQueryItem(name: "pageToken", value: pageToken))
+            }
+            guard let url = components.url else {
+                throw CalendarProviderError.networkError("Invalid URL")
+            }
 
-        guard let url = components.url else {
-            throw CalendarProviderError.networkError("Invalid URL")
-        }
+            var request = URLRequest(url: url)
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("MeetingMonitor/1.0", forHTTPHeaderField: "User-Agent")
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                throw CalendarProviderError.networkError("Invalid response")
+            }
+            if http.statusCode == 401 {
+                markAuthFailure("Google rejected the access token. Sign in again in Preferences.")
+                throw CalendarProviderError.authFailed("Google rejected the access token.")
+            }
+            guard (200...299).contains(http.statusCode) else {
+                throw CalendarProviderError.httpStatus(http.statusCode)
+            }
 
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw CalendarProviderError.networkError("Invalid response")
-        }
-        if http.statusCode == 401 {
-            markAuthFailure("Token expired. Sign in again in Preferences.")
-            throw CalendarProviderError.authFailed("Token expired. Sign in again in Preferences.")
-        }
-        guard (200...299).contains(http.statusCode) else {
-            throw CalendarProviderError.httpStatus(http.statusCode)
-        }
+            let page = try await Task.detached(priority: .utility) { try Self.parsePage(data: data) }.value
+            meetings.append(contentsOf: page.meetings)
+            pageToken = page.nextPageToken
+            pages += 1
+        } while pageToken != nil && pages < maxPages
 
         lastAuthError = nil
-        return try Self.parseEvents(data: data)
+        return meetings
     }
 
     // MARK: - Token
@@ -158,36 +195,30 @@ final class GoogleCalendarClient: ObservableObject {
             fields["client_secret"] = secret
         }
 
-        var request = URLRequest(url: tokenURL)
+        var request = URLRequest(url: GoogleOAuthFlow.tokenURL)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpBody = GoogleOAuthFlow.formURLEncodedBody(fields)
 
         let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            markAuthFailure("Token refresh failed. Sign in again in Preferences.")
-            throw CalendarProviderError.authFailed("Token refresh failed. Sign in again in Preferences.")
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+        guard (200...299).contains(status) else {
+            let oauthError = json?["error"] as? String
+            if Self.isCredentialRejection(status: status, oauthError: oauthError) {
+                markAuthFailure("Google refused the stored sign-in (\(oauthError ?? "HTTP \(status)")). Sign in again in Preferences.")
+                throw CalendarProviderError.authFailed("Google refused the stored sign-in.")
+            }
+            throw CalendarProviderError.httpStatus(status)
         }
 
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let accessToken = json["access_token"] as? String else {
-            markAuthFailure("Token refresh returned no access token.")
-            throw CalendarProviderError.authFailed("Token refresh returned no access token.")
+        guard let accessToken = json?["access_token"] as? String else {
+            throw CalendarProviderError.decodeFailed
         }
 
-        let expiresIn = json["expires_in"] as? Double ?? 3600
-        let expiry = Date().addingTimeInterval(expiresIn - 60)
-
-        let updated = CalendarCredentials(
-            provider: "google",
-            username: creds.username,
-            password: nil,
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-            tokenExpiry: expiry,
-            clientId: clientId,
-            clientSecret: creds.clientSecret
-        )
+        let expiresIn = json?["expires_in"] as? Double ?? 3600
+        let updated = creds.replacingAccessToken(accessToken, expiry: Date().addingTimeInterval(expiresIn - 60))
         credentials = updated
         CredentialStore.save(credential: updated)
         lastAuthError = nil
@@ -195,116 +226,101 @@ final class GoogleCalendarClient: ObservableObject {
         return accessToken
     }
 
-    /// Surface re-auth UI without wiping the refresh token (user can Sign in again).
+    /// Token-endpoint responses meaning the refresh token or client is no longer valid
+    /// (as opposed to transient server failures).
+    nonisolated static func isCredentialRejection(status: Int, oauthError: String?) -> Bool {
+        if let oauthError, ["invalid_grant", "invalid_client", "unauthorized_client"].contains(oauthError) {
+            return true
+        }
+        return status == 401
+    }
+
+    /// Surfaces re-auth UI without wiping the refresh token (the user can sign in again).
     private func markAuthFailure(_ message: String) {
         lastAuthError = message
         guard let creds = credentials else { return }
-        // Drop only the short-lived access token so the next attempt forces refresh/sign-in.
-        let cleared = CalendarCredentials(
-            provider: creds.provider,
-            username: creds.username,
-            password: nil,
-            accessToken: nil,
-            refreshToken: creds.refreshToken,
-            tokenExpiry: nil,
-            clientId: creds.clientId,
-            clientSecret: creds.clientSecret
-        )
+        // Drop only the short-lived access token so the next attempt forces a refresh.
+        let cleared = creds.replacingAccessToken(nil, expiry: nil)
         credentials = cleared
         CredentialStore.save(credential: cleared)
         logger.error("Google auth failure: \(message, privacy: .public)")
     }
 
-    // MARK: - Parsing (testable)
+    private enum Keys {
+        static let oauthClientID = "googleOAuthClientID"
+        /// Removed on launch: secrets must not live in UserDefaults.
+        static let legacyOAuthClientSecret = "googleOAuthClientSecret"
+    }
+}
+
+// MARK: - Parsing
+
+extension GoogleCalendarClient {
+    struct EventsPage {
+        let meetings: [Meeting]
+        let nextPageToken: String?
+    }
 
     nonisolated static func parseEvents(data: Data) throws -> [Meeting] {
-        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        guard let items = json?["items"] as? [[String: Any]] else {
-            return []
-        }
+        try parsePage(data: data).meetings
+    }
 
-        return items.compactMap { item in
+    nonisolated static func parsePage(data: Data) throws -> EventsPage {
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw CalendarProviderError.decodeFailed
+        }
+        let items = json["items"] as? [[String: Any]] ?? []
+
+        let meetings = items.compactMap { item -> Meeting? in
             guard let id = item["id"] as? String,
-                  let summary = item["summary"] as? String else {
+                  (item["status"] as? String) != "cancelled" else {
                 return nil
             }
 
             let startInfo = item["start"] as? [String: Any]
             let endInfo = item["end"] as? [String: Any]
-            let isAllDay = startInfo?["date"] != nil
-
             guard let startDate = parseGoogleDate(startInfo) else { return nil }
             let endDate = parseGoogleDate(endInfo) ?? startDate
 
-            let location = item["location"] as? String
-            let meetingLink = extractMeetLink(from: item)
-            let attendees = (item["attendees"] as? [[String: Any]])?.compactMap { $0["email"] as? String } ?? []
-            let isRecurring = item["recurringEventId"] as? String != nil
+            let summary = (item["summary"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            let location = (item["location"] as? String).flatMap { $0.isEmpty ? nil : $0 }
 
             return Meeting(
                 id: "google_\(id)",
-                title: summary,
+                title: summary ?? Meeting.untitled,
                 startDate: startDate,
                 endDate: endDate,
                 location: location,
-                meetingLink: meetingLink,
-                isAllDay: isAllDay,
-                source: .googleCalendar,
-                attendees: attendees,
-                isRecurring: isRecurring,
-                calendarName: "Google Calendar"
+                meetingLink: extractMeetingLink(from: item),
+                isAllDay: startInfo?["date"] != nil,
+                source: .googleCalendar
             )
         }
+        return EventsPage(meetings: meetings, nextPageToken: json["nextPageToken"] as? String)
     }
 
     nonisolated static func parseGoogleDate(_ info: [String: Any]?) -> Date? {
         guard let info else { return nil }
-        if let dateTimeStr = info["dateTime"] as? String {
-            return parseISO8601(dateTimeStr)
+        if let dateTime = info["dateTime"] as? String {
+            return fractionalISOFormatter.date(from: dateTime) ?? isoFormatter.date(from: dateTime)
         }
-        if let dateStr = info["date"] as? String {
-            let df = DateFormatter()
-            df.locale = Locale(identifier: "en_US_POSIX")
-            df.dateFormat = "yyyy-MM-dd"
-            return df.date(from: dateStr)
+        if let date = info["date"] as? String {
+            // All-day dates are floating; resolve them in the local time zone.
+            return ICalendarParser.parseDateTime(date.replacingOccurrences(of: "-", with: ""))?.date
         }
         return nil
     }
 
-    nonisolated private static func parseISO8601(_ string: String) -> Date? {
-        let withFractional = ISO8601DateFormatter()
-        withFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = withFractional.date(from: string) { return date }
-
-        let basic = ISO8601DateFormatter()
-        basic.formatOptions = [.withInternetDateTime]
-        return basic.date(from: string)
-    }
-
-    nonisolated private static func extractMeetLink(from item: [String: Any]) -> String? {
-        if let conferenceData = item["conferenceData"] as? [String: Any],
-           let entryPoints = conferenceData["entryPoints"] as? [[String: Any]] {
+    private nonisolated static func extractMeetingLink(from item: [String: Any]) -> URL? {
+        if let entryPoints = (item["conferenceData"] as? [String: Any])?["entryPoints"] as? [[String: Any]] {
             for entry in entryPoints where (entry["entryPointType"] as? String) == "video" {
-                return entry["uri"] as? String
+                if let uri = entry["uri"] as? String, let url = URL(string: uri), url.scheme?.hasPrefix("http") == true {
+                    return url
+                }
             }
         }
-        if let location = item["location"] as? String,
-           location.contains("meet.google.com") || location.contains("zoom.us") ||
-           location.contains("teams.microsoft.com") {
-            return location
-        }
-        return nil
-    }
-
-    private static func isoString(from date: Date) -> String {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime]
-        return f.string(from: date)
-    }
-
-    private enum Keys {
-        static let oauthClientID = "googleOAuthClientID"
-        /// Removed: secrets must not live in UserDefaults.
-        static let legacyOAuthClientSecret = "googleOAuthClientSecret"
+        return MeetingLinkDetector.conferenceURL(from: item["hangoutLink"] as? String)
+            ?? MeetingLinkDetector.firstLink(in: item["location"] as? String)
+            ?? MeetingLinkDetector.firstLink(in: item["description"] as? String)
     }
 }

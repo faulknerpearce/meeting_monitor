@@ -28,7 +28,5 @@
 	<string>Copyright © 2026 Austin Faulkner-Pearce. MIT License.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Meeting Monitor briefly opens a local port on 127.0.0.1 to complete sign-in with Google Calendar.</string>
 </dict>
 </plist>

@@ -1,65 +1,32 @@
 import AppKit
 
+@MainActor
 enum MenuBarStatusRenderer {
-    static func image(meetings: [Meeting], showSource: Bool) -> NSImage {
-        let height: CGFloat = 22
-        let font = NSFont.systemFont(ofSize: 12, weight: .medium)
-        let textColor = NSColor.labelColor
+    static let height: CGFloat = 22
+    static let maxWidth: CGFloat = 220
 
-        guard let next = MeetingFormat.nextMeeting(from: meetings) else {
-            return placeholderImage(height: height, font: font, textColor: textColor)
+    /// "Next meeting · 4:30 PM" (no meeting title), optionally with a source badge.
+    static func labelText(meetings: [Meeting], showSource: Bool, now: Date = Date()) -> String {
+        guard let next = MeetingFormat.nextMeeting(from: meetings, now: now) else {
+            return "No meetings"
         }
-
-        let text = formatLabel(next: next, showSource: showSource)
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: textColor,
-        ]
-
-        let size = text.size(withAttributes: attrs)
-        let width = min(ceil(size.width + 6), 220)
-        let image = NSImage(size: NSSize(width: width, height: height))
-        image.isTemplate = true
-        image.lockFocus()
-        defer { image.unlockFocus() }
-        NSGraphicsContext.current?.imageInterpolation = .high
-        text.draw(
-            at: NSPoint(x: 3, y: (height - size.height) / 2 - 0.5),
-            withAttributes: attrs
-        )
-        return image
+        let time = MeetingFormat.menuBarTime(for: next, now: now)
+        return showSource ? "Next meeting · \(time) · \(next.source.badge)" : "Next meeting · \(time)"
     }
 
-    /// Menu bar: "Next meeting · 4:30 PM" (no meeting title).
-    private static func formatLabel(next: Meeting, showSource: Bool) -> String {
-        let time = MeetingFormat.menuBarTime(for: next)
-        if showSource {
-            let sourceIcon = next.source == .googleCalendar ? "G" : "S"
-            return "Next meeting · \(time) · \(sourceIcon)"
-        }
-        return "Next meeting · \(time)"
-    }
-
-    private static func placeholderImage(
-        height: CGFloat,
-        font: NSFont,
-        textColor: NSColor
-    ) -> NSImage {
-        let label = "No meetings"
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: textColor,
+    /// Template image of `text`; the menu bar tints it for the current appearance.
+    static func image(text: String) -> NSImage {
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+            .foregroundColor: NSColor.black,
         ]
-        let size = label.size(withAttributes: attrs)
-        let width = ceil(size.width + 6)
-        let image = NSImage(size: NSSize(width: width, height: height))
+        let textSize = text.size(withAttributes: attributes)
+        let size = NSSize(width: min(ceil(textSize.width + 6), maxWidth), height: height)
+        let image = NSImage(size: size, flipped: false) { rect in
+            text.draw(at: NSPoint(x: 3, y: (rect.height - textSize.height) / 2 - 0.5), withAttributes: attributes)
+            return true
+        }
         image.isTemplate = true
-        image.lockFocus()
-        defer { image.unlockFocus() }
-        label.draw(
-            at: NSPoint(x: 3, y: (height - size.height) / 2 - 0.5),
-            withAttributes: attrs
-        )
         return image
     }
 }

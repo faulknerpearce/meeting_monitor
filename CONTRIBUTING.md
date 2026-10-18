@@ -5,20 +5,20 @@ Thanks for helping improve Meeting Monitor. This project is a native macOS menu 
 ## Development setup
 
 1. Install [Xcode 15+](https://developer.apple.com/xcode/) on macOS 14+.
-2. Clone the repo and generate the Xcode project.
+2. Clone the repo and open the committed Xcode project.
 3. Select the **MeetingMonitor** scheme → **My Mac** → Run.
 
 ```bash
 git clone https://github.com/faulknerpearce/meeting_monitor.git
 cd meeting_monitor
-python3 Scripts/generate_xcodeproj.py
 open MeetingMonitor.xcodeproj
 ```
 
-After adding or removing source files, regenerate the Xcode project:
+The project is generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen). After adding or removing source files, regenerate it and commit the result:
 
 ```bash
-python3 Scripts/generate_xcodeproj.py
+brew install xcodegen   # once
+make project
 ```
 
 To regenerate the app icon:
@@ -31,16 +31,12 @@ swift Scripts/generate_icon.swift MeetingMonitor/Resources/Assets.xcassets/AppIc
 
 - Keep changes focused on one concern.
 - Prefer clear commit messages that explain *why*.
-- Run tests:
+- Run the same checks as CI (`brew install swiftlint swiftformat` once):
 
 ```bash
-xcodebuild \
-  -project MeetingMonitor.xcodeproj \
-  -scheme MeetingMonitor \
-  -destination 'platform=macOS' \
-  -derivedDataPath build/DerivedData \
-  CODE_SIGN_IDENTITY="-" \
-  test
+make lint
+make format   # `make format-fix` applies the formatting
+make test
 ```
 
 ## Pull requests
@@ -55,7 +51,7 @@ xcodebuild \
 - Swift 5.10+, macOS 14+
 - Match existing structure: `App/`, `Features/{Calendars,MenuBar,Settings}`, `Helpers/`
 - Prefer `@MainActor` for UI-adjacent services
-- Use `os.Logger` (subsystem `com.meetingmonitor.app`) instead of `print`
+- Use `Logger(category:)` (subsystem `com.meetingmonitor.app`) instead of `print`
 - Do not commit credentials, OAuth secrets, or local Application Support files
 
 ## Reporting bugs

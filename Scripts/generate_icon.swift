@@ -8,16 +8,16 @@ import Foundation
 
 /// Classic filled video-camera: rounded body, lens cutout, side snout.
 func videoCallPath(in rect: NSRect) -> NSBezierPath {
-    let s = min(rect.width, rect.height) / 16
-    let ox = rect.midX - 8 * s
-    let oy = rect.midY - 8 * s
+    let unit = min(rect.width, rect.height) / 16
+    let originX = rect.midX - 8 * unit
+    let originY = rect.midY - 8 * unit
 
     func p(_ x: CGFloat, _ y: CGFloat) -> NSPoint {
-        NSPoint(x: ox + x * s, y: oy + y * s)
+        NSPoint(x: originX + x * unit, y: originY + y * unit)
     }
 
-    func r(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> NSRect {
-        NSRect(x: ox + x * s, y: oy + y * s, width: w * s, height: h * s)
+    func r(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> NSRect {
+        NSRect(x: originX + x * unit, y: originY + y * unit, width: width * unit, height: height * unit)
     }
 
     let path = NSBezierPath()
@@ -26,8 +26,8 @@ func videoCallPath(in rect: NSRect) -> NSBezierPath {
     // Camera body
     let body = NSBezierPath(
         roundedRect: r(1.4, 3.6, 9.4, 8.8),
-        xRadius: 1.6 * s,
-        yRadius: 1.6 * s
+        xRadius: 1.6 * unit,
+        yRadius: 1.6 * unit
     )
     path.append(body)
 
@@ -86,8 +86,12 @@ func drawIcon(size: Int, path: String) {
         fputs("Failed to make image for \(size)\n", stderr)
         return
     }
+    writeOpaquePNG(cgImage, size: size, path: path)
+}
 
-    // Flatten to opaque RGB PNG (no alpha).
+/// Flattens to an opaque RGB PNG (no alpha) and writes it to `path`.
+func writeOpaquePNG(_ cgImage: CGImage, size: Int, path: String) {
+    let pixels = CGFloat(size)
     guard let rgbCtx = CGContext(
         data: nil,
         width: size,

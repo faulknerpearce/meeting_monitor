@@ -1,0 +1,20 @@
+--swiftversion 5.10
+--exclude build,.build,DerivedData,dist
+--indent 4
+--maxwidth 140
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--commas always
+--stripunusedargs closure-only
+--self remove
+--importgrouping alpha
+--header ignore
+--guardelse same-line
+--elseposition same-line
+--ranges no-space
+# Rules disabled to match the existing style (or because they change semantics):
+# one-line `if x { return }`, explicit `return`, `case .x(let y)`, K&R braces on
+# multiline conditions, PanelCard's @ViewBuilder init, Group in view builders.
+--disable wrapIfStatementBodies,wrapPropertyBodies,redundantReturn,conditionalAssignment,noForceUnwrapInTests,docComments,wrapMultilineStatementBraces,hoistPatternLet,redundantMemberwiseInit,redundantSwiftUIGroup

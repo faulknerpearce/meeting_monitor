@@ -1,21 +1,26 @@
-import Foundation
-import CryptoKit
 import AppKit
+import CryptoKit
+import Foundation
 import os
-import Darwin
 import Security
 
 /// Desktop OAuth 2.0 authorization-code flow with PKCE and a loopback redirect
 /// (`http://127.0.0.1:<port>/`), matching Google's native-app guidance.
 enum GoogleOAuthFlow {
-    private static let logger = Logger(subsystem: "com.meetingmonitor.app", category: "GoogleOAuth")
+    private static let logger = Logger(category: "GoogleOAuth")
     private static let authURL = URL(string: "https://accounts.google.com/o/oauth2/v2/auth")!
-    private static let tokenURL = URL(string: "https://oauth2.googleapis.com/token")!
+    static let tokenURL = URL(string: "https://oauth2.googleapis.com/token")!
     private static let userInfoURL = URL(string: "https://www.googleapis.com/oauth2/v2/userinfo")!
 
     static let calendarScope = "https://www.googleapis.com/auth/calendar.readonly"
     static let emailScope = "https://www.googleapis.com/auth/userinfo.email"
     static let openIDScope = "openid"
+
+    /// OAuth client registration (Desktop app type); the secret is optional for some clients.
+    struct Client: Sendable {
+        let id: String
+        let secret: String?
+    }
 
     struct Tokens: Sendable {
         let accessToken: String
@@ -24,7 +29,7 @@ enum GoogleOAuthFlow {
         let email: String?
     }
 
-    enum OAuthError: LocalizedError {
+    enum OAuthError: LocalizedError, Equatable {
         case missingClientID
         case serverStartFailed
         case userCancelled
@@ -53,7 +58,8 @@ enum GoogleOAuthFlow {
         }
     }
 
-    /// Runs the full browser-based sign-in. Cancels if `timeout` elapses.
+    /// Runs the full browser-based sign-in. Fails with `.timedOut` after `timeout` and with
+    /// `.userCancelled` when the calling task is cancelled.
     static func signIn(
         clientID: String,
         clientSecret: String?,
@@ -67,7 +73,8 @@ enum GoogleOAuthFlow {
         let challenge = PKCE.challenge(for: verifier)
         let state = PKCE.randomURLSafe(byteCount: 24)
 
-        let callback = try await LoopbackCallbackServer.start()
+        let callback = try LoopbackCallbackServer.start()
+        defer { callback.cancel() }
         let redirectURI = "http://127.0.0.1:\(callback.port)/"
 
         var components = URLComponents(url: authURL, resolvingAgainstBaseURL: false)!
@@ -84,39 +91,21 @@ enum GoogleOAuthFlow {
             URLQueryItem(name: "include_granted_scopes", value: "true"),
         ]
         guard let url = components.url else {
-            await callback.cancel()
             throw OAuthError.serverStartFailed
         }
 
         logger.info("Opening Google OAuth in browser (loopback port \(callback.port, privacy: .public))")
         await MainActor.run {
-            NSWorkspace.shared.open(url)
+            _ = NSWorkspace.shared.open(url)
         }
 
-        let query: [String: String]
-        do {
-            query = try await withThrowingTaskGroup(of: [String: String].self) { group in
-                group.addTask {
-                    try await callback.waitForCallback()
-                }
-                group.addTask {
-                    try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-                    throw OAuthError.timedOut
-                }
-                let result = try await group.next()!
-                group.cancelAll()
-                return result
-            }
-        } catch {
-            await callback.cancel()
-            throw error
-        }
+        let query = try await waitForRedirect(from: callback, timeout: timeout)
 
+        guard query["state"] == state else {
+            throw OAuthError.authorizationFailed("Invalid state parameter (possible CSRF).")
+        }
         if let err = query["error"] {
             throw OAuthError.authorizationFailed(query["error_description"] ?? err)
-        }
-        guard let returnedState = query["state"], returnedState == state else {
-            throw OAuthError.authorizationFailed("Invalid state parameter (possible CSRF).")
         }
         guard let code = query["code"], !code.isEmpty else {
             throw OAuthError.missingCode
@@ -125,11 +114,35 @@ enum GoogleOAuthFlow {
         return try await exchangeCode(
             code: code,
             redirectURI: redirectURI,
-            clientID: trimmedID,
-            clientSecret: clientSecret,
+            client: Client(id: trimmedID, secret: clientSecret),
             codeVerifier: verifier,
             session: session
         )
+    }
+
+    /// Races the loopback redirect against `timeout`. The waiter is cancellation-aware, so the
+    /// losing child finishes promptly and the group can return.
+    static func waitForRedirect(
+        from callback: LoopbackCallbackServer,
+        timeout: TimeInterval
+    ) async throws -> [String: String] {
+        do {
+            return try await withThrowingTaskGroup(of: [String: String].self) { group in
+                group.addTask {
+                    try await callback.waitForCallback()
+                }
+                group.addTask {
+                    try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                    throw OAuthError.timedOut
+                }
+                defer { group.cancelAll() }
+                guard let result = try await group.next() else { throw OAuthError.userCancelled }
+                return result
+            }
+        } catch {
+            if Task.isCancelled || error is CancellationError { throw OAuthError.userCancelled }
+            throw error
+        }
     }
 
     // MARK: - Token exchange
@@ -137,19 +150,18 @@ enum GoogleOAuthFlow {
     private static func exchangeCode(
         code: String,
         redirectURI: String,
-        clientID: String,
-        clientSecret: String?,
+        client: Client,
         codeVerifier: String,
         session: URLSession
     ) async throws -> Tokens {
         var fields: [String: String] = [
             "code": code,
-            "client_id": clientID,
+            "client_id": client.id,
             "redirect_uri": redirectURI,
             "grant_type": "authorization_code",
             "code_verifier": codeVerifier,
         ]
-        if let secret = clientSecret?.trimmingCharacters(in: .whitespacesAndNewlines), !secret.isEmpty {
+        if let secret = client.secret?.trimmingCharacters(in: .whitespacesAndNewlines), !secret.isEmpty {
             fields["client_secret"] = secret
         }
 
@@ -161,10 +173,10 @@ enum GoogleOAuthFlow {
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200...299).contains(status),
-              let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let accessToken = json["access_token"] as? String else {
             let body = String(data: data, encoding: .utf8) ?? "HTTP \(status)"
-            logger.error("Token exchange failed: \(body, privacy: .public)")
+            logger.error("Token exchange failed with HTTP \(status, privacy: .public)")
             throw OAuthError.tokenExchangeFailed(summarizeTokenError(body))
         }
 
@@ -186,8 +198,7 @@ enum GoogleOAuthFlow {
     }
 
     private static func summarizeTokenError(_ body: String) -> String {
-        if let data = body.data(using: .utf8),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        if let json = try? JSONSerialization.jsonObject(with: Data(body.utf8)) as? [String: Any],
            let error = json["error"] as? String {
             let desc = json["error_description"] as? String
             return desc.map { "\($0) (\(error))" } ?? error
@@ -206,14 +217,15 @@ enum GoogleOAuthFlow {
         return json["email"] as? String
     }
 
+    /// `application/x-www-form-urlencoded` body; only RFC 3986 unreserved characters pass unescaped.
     static func formURLEncodedBody(_ fields: [String: String]) -> Data {
-        let allowed = CharacterSet.urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&=+"))
-        let pairs = fields.map { key, value in
-            let k = key.addingPercentEncoding(withAllowedCharacters: allowed) ?? key
-            let v = value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
-            return "\(k)=\(v)"
+        let unreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        let pairs = fields.sorted { $0.key < $1.key }.map { key, value in
+            let encodedKey = key.addingPercentEncoding(withAllowedCharacters: unreserved) ?? key
+            let encodedValue = value.addingPercentEncoding(withAllowedCharacters: unreserved) ?? value
+            return "\(encodedKey)=\(encodedValue)"
         }
-        return pairs.joined(separator: "&").data(using: .utf8) ?? Data()
+        return Data(pairs.joined(separator: "&").utf8)
     }
 }
 
@@ -244,218 +256,5 @@ private extension Data {
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "=", with: "")
-    }
-}
-
-// MARK: - Loopback server (POSIX sockets)
-
-/// Minimal HTTP server on a free port that captures a single OAuth redirect query.
-/// Uses POSIX sockets directly to avoid NWListener sandbox issues on macOS 15+.
-final class LoopbackCallbackServer: @unchecked Sendable {
-    let port: UInt16
-    private let listenFd: Int32
-    private let queue = DispatchQueue(label: "com.meetingmonitor.oauth.loopback")
-    private var continuation: CheckedContinuation<[String: String], Error>?
-    private var pendingQuery: [String: String]?
-    private var finished = false
-    private var acceptSource: DispatchSourceRead?
-
-    private init(listenFd: Int32, port: UInt16) {
-        self.listenFd = listenFd
-        self.port = port
-    }
-
-    static func start() async throws -> LoopbackCallbackServer {
-        let fd = socket(AF_INET, SOCK_STREAM, 0)
-        guard fd >= 0 else {
-            throw GoogleOAuthFlow.OAuthError.serverStartFailed
-        }
-
-        var reuse: Int32 = 1
-        setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, socklen_t(MemoryLayout<Int32>.size))
-
-        var addr = sockaddr_in()
-        addr.sin_family = sa_family_t(AF_INET)
-        addr.sin_port = 0
-        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
-
-        let bindResult = withUnsafePointer(to: &addr) { ptr in
-            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                bind(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
-            }
-        }
-        guard bindResult == 0 else {
-            close(fd)
-            throw GoogleOAuthFlow.OAuthError.serverStartFailed
-        }
-
-        var actualAddr = sockaddr_in()
-        var addrLen = socklen_t(MemoryLayout<sockaddr_in>.size)
-        let getResult = withUnsafeMutablePointer(to: &actualAddr) { ptr in
-            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                getsockname(fd, $0, &addrLen)
-            }
-        }
-        guard getResult == 0 else {
-            close(fd)
-            throw GoogleOAuthFlow.OAuthError.serverStartFailed
-        }
-        let port = UInt16(bigEndian: actualAddr.sin_port)
-
-        guard listen(fd, 1) == 0 else {
-            close(fd)
-            throw GoogleOAuthFlow.OAuthError.serverStartFailed
-        }
-
-        return LoopbackCallbackServer(listenFd: fd, port: port)
-    }
-
-    func waitForCallback() async throws -> [String: String] {
-        try await withCheckedThrowingContinuation { cont in
-            queue.async { [weak self] in
-                guard let self else {
-                    cont.resume(throwing: GoogleOAuthFlow.OAuthError.userCancelled)
-                    return
-                }
-                if let pending = self.pendingQuery {
-                    cont.resume(returning: pending)
-                    return
-                }
-                self.continuation = cont
-                self.startAccepting()
-            }
-        }
-    }
-
-    private func startAccepting() {
-        let source = DispatchSource.makeReadSource(fileDescriptor: listenFd, queue: queue)
-        self.acceptSource = source
-        source.setEventHandler { [weak self] in
-            self?.handleAccept()
-        }
-        source.setCancelHandler { [listenFd] in
-            close(listenFd)
-        }
-        source.resume()
-    }
-
-    private func handleAccept() {
-        var clientAddr = sockaddr()
-        var addrLen = socklen_t(MemoryLayout<sockaddr>.size)
-        let clientFd = accept(listenFd, &clientAddr, &addrLen)
-        guard clientFd >= 0 else { return }
-
-        // Read HTTP request
-        var buffer = [UInt8](repeating: 0, count: 65536)
-        let n = read(clientFd, &buffer, buffer.count)
-        guard n > 0 else {
-            close(clientFd)
-            return
-        }
-
-        let request = String(bytes: buffer[0..<n], encoding: .utf8) ?? ""
-        let query = Self.parseQuery(fromHTTPRequest: request)
-
-        let html = query["error"] != nil ? Self.failureHTML(query: query) : Self.successHTML
-        let response = """
-        HTTP/1.1 200 OK\r
-        Content-Type: text/html; charset=utf-8\r
-        Content-Length: \(html.utf8.count)\r
-        Connection: close\r
-        \r
-        \(html)
-        """
-        _ = response.withCString { cstr in
-            write(clientFd, cstr, strlen(cstr))
-        }
-        close(clientFd)
-
-        finish(with: .success(query))
-    }
-
-    func cancel() async {
-        queue.sync {
-            guard !finished else { return }
-            finished = true
-            continuation?.resume(throwing: GoogleOAuthFlow.OAuthError.userCancelled)
-            continuation = nil
-            acceptSource?.cancel()
-        }
-    }
-
-    private func finish(with result: Result<[String: String], Error>) {
-        queue.async {
-            guard !self.finished else { return }
-            self.finished = true
-            self.acceptSource?.cancel()
-            self.acceptSource = nil
-            switch result {
-            case .success(let query):
-                if let cont = self.continuation {
-                    cont.resume(returning: query)
-                } else {
-                    self.pendingQuery = query
-                }
-            case .failure(let error):
-                self.continuation?.resume(throwing: error)
-            }
-            self.continuation = nil
-        }
-    }
-
-    private static func parseQuery(fromHTTPRequest request: String) -> [String: String] {
-        let firstLine = request.split(separator: "\r\n", maxSplits: 1).first.map(String.init) ?? request
-        let parts = firstLine.split(separator: " ")
-        guard parts.count >= 2 else { return [:] }
-        let path = String(parts[1])
-        guard let qIndex = path.firstIndex(of: "?") else { return [:] }
-        let query = String(path[path.index(after: qIndex)...])
-        var result: [String: String] = [:]
-        for pair in query.split(separator: "&") {
-            let kv = pair.split(separator: "=", maxSplits: 1).map(String.init)
-            guard kv.count == 2 else { continue }
-            let key = kv[0].removingPercentEncoding ?? kv[0]
-            let value = kv[1].removingPercentEncoding ?? kv[1]
-            result[key] = value
-        }
-        return result
-    }
-
-    private static let successHTML = """
-    <!DOCTYPE html>
-    <html><head><meta charset="utf-8"><title>Meeting Monitor</title>
-    <style>
-      body { font-family: -apple-system, system-ui, sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#f5f5f7; color:#1d1d1f; }
-      .card { background:white; padding:2rem 2.5rem; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,.08); text-align:center; max-width:28rem; }
-      h1 { font-size:1.25rem; margin:0 0 .5rem; }
-      p { color:#6e6e73; margin:0; line-height:1.4; }
-    </style></head>
-    <body><div class="card">
-      <h1>Connected to Google Calendar</h1>
-      <p>You can close this window and return to Meeting Monitor.</p>
-    </div></body></html>
-    """
-
-    private static func failureHTML(query: [String: String]) -> String {
-        let detail = query["error_description"] ?? query["error"] ?? "Sign-in was not completed."
-        let escaped = detail
-            .replacingOccurrences(of: "&", with: "&amp;")
-            .replacingOccurrences(of: "<", with: "&lt;")
-            .replacingOccurrences(of: ">", with: "&gt;")
-        return """
-        <!DOCTYPE html>
-        <html><head><meta charset="utf-8"><title>Meeting Monitor</title>
-        <style>
-          body { font-family: -apple-system, system-ui, sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#f5f5f7; color:#1d1d1f; }
-          .card { background:white; padding:2rem 2.5rem; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,.08); text-align:center; max-width:28rem; }
-          h1 { font-size:1.25rem; margin:0 0 .5rem; }
-          p { color:#6e6e73; margin:0; line-height:1.4; }
-        </style></head>
-        <body><div class="card">
-          <h1>Google sign-in did not complete</h1>
-          <p>\(escaped)</p>
-          <p style="margin-top:0.75rem">Close this window and try again in Meeting Monitor.</p>
-        </div></body></html>
-        """
     }
 }

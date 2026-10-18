@@ -1,6 +1,6 @@
-import SwiftUI
 import AppKit
 import Combine
+import SwiftUI
 
 @main
 struct MeetingMonitorApp: App {
@@ -19,7 +19,7 @@ struct MeetingMonitorApp: App {
             PreferencesRoot(model: model)
                 .background(PreferencesWindowLifecycle())
         }
-        .defaultSize(width: 480, height: 560)
+        .defaultSize(width: 500, height: 560)
     }
 }
 
@@ -33,26 +33,31 @@ final class AppModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
+    /// True when the process is hosting unit tests; the app then stays idle.
+    static var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+
     init() {
         let session: URLSession = {
-            let config = URLSessionConfiguration.default
+            // Ephemeral: no on-disk cache or persistent cookies for calendar traffic.
+            let config = URLSessionConfiguration.ephemeral
             config.timeoutIntervalForRequest = 30
             config.timeoutIntervalForResource = 60
-            config.httpAdditionalHeaders = ["User-Agent": "MeetingMonitor/1.0"]
+            let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+            config.httpAdditionalHeaders = ["User-Agent": "MeetingMonitor/\(version)"]
             return URLSession(configuration: config)
         }()
         googleClient = GoogleCalendarClient(session: session)
         spacemailClient = SpacemailCalDAVClient(session: session)
-        poller = MeetingPoller(
-            settings: settings,
-            googleClient: googleClient,
-            spacemailClient: spacemailClient
-        )
+        poller = MeetingPoller(settings: settings, providers: [googleClient, spacemailClient])
         forwardChanges(from: settings)
         forwardChanges(from: poller)
         forwardChanges(from: googleClient)
         forwardChanges(from: spacemailClient)
-        poller.start()
+        if !Self.isRunningTests {
+            poller.start()
+        }
     }
 
     /// MenuBarExtra label only observes `AppModel`; forward child updates.
@@ -108,7 +113,8 @@ private struct MenuBarLabelContainer: View {
     var body: some View {
         MenuBarLabelView(
             meetings: model.poller.filteredMeetings,
-            showSource: model.settings.showSourceInMenuBar
+            showSource: model.settings.showSourceInMenuBar,
+            now: model.poller.clock
         )
     }
 }
