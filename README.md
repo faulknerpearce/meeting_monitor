@@ -16,7 +16,7 @@ Meeting Monitor sits in the macOS menu bar and shows the next meeting (`Next mee
 | Area | Details |
 |------|---------|
 | **Menu bar** | `Next meeting · {time}` (+ optional `G`/`S` source badge); no meeting title in the bar |
-| **Dropdown** | Day navigator with all-day + timed list, join link, refresh, source toggles |
+| **Dropdown** | Native Control Center–style menu: day navigator, all-day + timed meetings with hover-to-join rows, refresh, per-calendar switches |
 | **Google Calendar** | OAuth refresh-token based access to primary calendar |
 | **Spacemail** | CalDAV discovery + time-range event fetch |
 | **Polling** | Faster while the menu is open; exponential backoff on errors; sleep / wake aware; a source that fails keeps its last good meetings |
@@ -87,7 +87,7 @@ MeetingMonitor/
     MenuBar/           # Label, panel, status renderer
     Settings/          # Preferences + AppSettings
   Helpers/             # Application Support CredentialStore, logging
-  Shared/              # Panel styling shared with token_monitor
+  Shared/              # Menu styling (Control Center–style rows, headers, separators)
   Resources/           # Info.plist, entitlements, assets
 MeetingMonitorTests/   # Unit tests; Fixtures/ holds sample payloads
 Scripts/               # generate_icon.swift
